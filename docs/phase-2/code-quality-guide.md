@@ -2,7 +2,7 @@
 
 ## 1. Mục tiêu
 
-Repo này ưu tiên bắt lỗi ngay trên máy local trước khi code được push. Cách làm này phù hợp với giai đoạn đầu của đồ án vì:
+Repo này ưu tiên bắt lỗi ngay trên máy local trước khi code được commit. Cách làm này phù hợp với giai đoạn đầu của đồ án vì:
 
 - setup nhanh hơn CI
 - phản hồi sớm cho người viết code
@@ -95,12 +95,7 @@ Khi commit, hook sẽ chạy:
 - `frontend`: `npm run lint`
 - `backend`: `mvn test`
 
-### pre-push
-
-Khi push, hook sẽ chạy:
-
-- `frontend`: `npm run build`
-- `backend`: `mvn test`
+Hiện tại repo chỉ giữ `pre-commit` để tránh chạy lặp lại cùng một bộ kiểm tra ở cả commit và push.
 
 ## 5. Khi nào nên thêm rule mới
 
