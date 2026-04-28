@@ -103,11 +103,15 @@ Backend dự kiến dùng `Clean Architecture` kết hợp tư duy `Hexagonal Ar
 
 ## Trạng thái hiện tại
 
-Giai đoạn đang triển khai: `Giai đoạn 1. Phân tích và đặc tả`
+Giai đoạn đang triển khai: `Giai đoạn 2. Dựng khung dự án`
 
 Tài liệu chi tiết:
 
 - [Đặc tả yêu cầu giai đoạn 1](docs/phase-1/requirements-specification.md)
 - [Sơ đồ use case](docs/phase-1/use-case-diagram.md)
 - [Sơ đồ thành phần](docs/phase-1/component-diagram.md)
+- [Kế hoạch triển khai giai đoạn 2](docs/phase-2/implementation-plan.md)
+- [Quyết định kỹ thuật giai đoạn 2](docs/phase-2/technical-decisions.md)
+- [Hướng dẫn Clean Architecture cho team](docs/phase-2/clean-architecture-guide.md)
+- [Hướng dẫn kiểm tra chất lượng code local](docs/phase-2/code-quality-guide.md)
 - [Tài liệu thiết kế ban đầu](thiet-ke-do-an-api-health-check-system.md)
