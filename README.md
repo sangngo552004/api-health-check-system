@@ -103,7 +103,7 @@ Backend dự kiến dùng `Clean Architecture` kết hợp tư duy `Hexagonal Ar
 
 ## Trạng thái hiện tại
 
-Giai đoạn đang triển khai: `Giai đoạn 2. Dựng khung dự án`
+Giai đoạn đang triển khai: `Giai đoạn 4. Tích hợp hạ tầng`
 
 Tài liệu chi tiết:
 
@@ -114,4 +114,5 @@ Tài liệu chi tiết:
 - [Quyết định kỹ thuật giai đoạn 2](docs/phase-2/technical-decisions.md)
 - [Hướng dẫn Clean Architecture cho team](docs/phase-2/clean-architecture-guide.md)
 - [Hướng dẫn kiểm tra chất lượng code local](docs/phase-2/code-quality-guide.md)
+- [Tổng kết Giai đoạn 3](docs/phase-3/implementation-summary.md)
 - [Tài liệu thiết kế ban đầu](thiet-ke-do-an-api-health-check-system.md)

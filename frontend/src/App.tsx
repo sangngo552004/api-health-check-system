@@ -5,8 +5,8 @@ export function App() {
         <p className="eyebrow">API Health Check System</p>
         <h1>Dashboard scaffold for monitoring services and response health.</h1>
         <p className="lead">
-          Giai doan 2 dung khung frontend. Cac widget, bieu do va du lieu that se
-          duoc bo sung o cac giai doan tiep theo.
+          Giai doan 2 dung khung frontend. Cac widget, bieu do va du lieu that
+          se duoc bo sung o cac giai doan tiep theo.
         </p>
       </section>
 

@@ -1,0 +1,11 @@
+package com.example.apihealthchecksystem.domain.valueobject;
+
+public enum HttpMethod {
+  GET,
+  POST,
+  PUT,
+  PATCH,
+  DELETE,
+  HEAD,
+  OPTIONS
+}

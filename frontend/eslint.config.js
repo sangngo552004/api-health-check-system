@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist", "node_modules"]
+    ignores: ["dist", "node_modules"],
   },
   {
     files: ["**/*.{ts,tsx}"],
@@ -14,24 +14,24 @@ export default tseslint.config(
       js.configs.recommended,
       ...tseslint.configs.recommended,
       reactHooks.configs["recommended-latest"],
-      reactRefresh.configs.vite
+      reactRefresh.configs.vite,
     ],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: import.meta.dirname
-      }
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ]
-    }
-  }
+          varsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 );
