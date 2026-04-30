@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
 import com.example.apihealthchecksystem.application.dto.EndpointDto;
+import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
 import com.example.apihealthchecksystem.domain.model.CheckPolicy;
@@ -25,6 +26,8 @@ class ManageEndpointServiceTest {
   @Mock private EndpointRepository endpointRepository;
 
   @Mock private CheckPolicyRepository checkPolicyRepository;
+
+  @Mock private EndpointDtoMapper mapper;
 
   @InjectMocks private ManageEndpointService manageEndpointService;
 
@@ -69,8 +72,29 @@ class ManageEndpointServiceTest {
             .latencyThresholdMillis(2000)
             .build();
 
+    EndpointDto mockDto =
+        new EndpointDto(
+            1L,
+            "Test API",
+            "http://test.com",
+            HttpMethod.GET,
+            "DEV",
+            CheckType.HTTP,
+            200,
+            true,
+            null,
+            null,
+            60,
+            5000,
+            3,
+            3,
+            2000);
+
+    when(mapper.toDomain(any(EndpointCreateCommand.class))).thenReturn(mockEndpoint);
+    when(mapper.toPolicyDomain(any(EndpointCreateCommand.class))).thenReturn(mockPolicy);
     when(endpointRepository.save(any(MonitoredEndpoint.class))).thenReturn(mockEndpoint);
     when(checkPolicyRepository.save(any(CheckPolicy.class))).thenReturn(mockPolicy);
+    when(mapper.toDto(any(MonitoredEndpoint.class), any(CheckPolicy.class))).thenReturn(mockDto);
 
     EndpointDto result = manageEndpointService.createEndpoint(command);
 

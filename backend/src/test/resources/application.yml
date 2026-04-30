@@ -6,6 +6,7 @@ spring:
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop   # Hibernate tự gen bảng từ @Entity, xóa sau khi test xong
+    database-platform: org.hibernate.dialect.H2Dialect
   flyway:
-    enabled: true
+    enabled: false            # Tắt Flyway — không cần migration trong Unit/Slice Test

@@ -1,0 +1,55 @@
+{
+  "error": {
+    "40001": "Dữ liệu đầu vào không hợp lệ.",
+    "40010": "Endpoint này đã tồn tại trong hệ thống.",
+    "40011": "URL endpoint không hợp lệ.",
+    "40401": "Không tìm thấy dữ liệu yêu cầu.",
+    "50000": "Đã có lỗi hệ thống bất ngờ xảy ra. Vui lòng thử lại sau."
+  },
+  "validation": {
+    "endpoint": {
+      "id": {
+        "not_null": "ID endpoint không được để trống."
+      },
+      "name": {
+        "not_blank": "Tên endpoint không được để trống."
+      },
+      "url": {
+        "not_blank": "URL không được để trống.",
+        "invalid": "URL phải bắt đầu bằng http:// hoặc https://"
+      },
+      "method": {
+        "not_null": "Phương thức HTTP không được để trống."
+      },
+      "checkType": {
+        "not_null": "Loại kiểm tra không được để trống."
+      },
+      "intervalSeconds": {
+        "not_null": "Chu kỳ kiểm tra không được để trống.",
+        "min": "Chu kỳ kiểm tra phải ít nhất là 5 giây."
+      },
+      "timeoutMillis": {
+        "not_null": "Timeout không được để trống.",
+        "min": "Timeout phải ít nhất là 100ms."
+      },
+      "retryCount": {
+        "not_null": "Số lần retry không được để trống.",
+        "min": "Số lần retry không được âm."
+      },
+      "failureThreshold": {
+        "not_null": "Ngưỡng thất bại không được để trống.",
+        "min": "Ngưỡng thất bại phải ít nhất là 1."
+      }
+    }
+  },
+  "common": {
+    "success": "Thành công.",
+    "loading": "Đang tải...",
+    "confirm": "Xác nhận",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "create": "Tạo mới"
+  }
+}

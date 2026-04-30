@@ -3,6 +3,7 @@ package com.example.apihealthchecksystem.application.usecase;
 import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
 import com.example.apihealthchecksystem.application.dto.EndpointDto;
 import com.example.apihealthchecksystem.application.dto.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageEndpointUseCase;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
@@ -18,40 +19,23 @@ public class ManageEndpointService implements ManageEndpointUseCase {
 
   private final EndpointRepository endpointRepository;
   private final CheckPolicyRepository checkPolicyRepository;
+  private final EndpointDtoMapper mapper;
 
   @Override
   public EndpointDto createEndpoint(EndpointCreateCommand command) {
-    MonitoredEndpoint endpoint =
-        MonitoredEndpoint.builder()
-            .name(command.name())
-            .url(command.url())
-            .method(command.method())
-            .environment(command.environment())
-            .checkType(command.checkType())
-            .expectedStatusCode(
-                command.expectedStatusCode() != null ? command.expectedStatusCode() : 200)
-            .isActive(true)
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
+    MonitoredEndpoint endpoint = mapper.toDomain(command);
+    endpoint.setCreatedAt(LocalDateTime.now());
+    endpoint.setUpdatedAt(LocalDateTime.now());
 
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
 
-    CheckPolicy policy =
-        CheckPolicy.builder()
-            .endpointId(savedEndpoint.getId())
-            .intervalSeconds(command.intervalSeconds() != null ? command.intervalSeconds() : 60)
-            .timeoutMillis(command.timeoutMillis() != null ? command.timeoutMillis() : 5000)
-            .retryCount(command.retryCount() != null ? command.retryCount() : 3)
-            .failureThreshold(command.failureThreshold() != null ? command.failureThreshold() : 3)
-            .latencyThresholdMillis(
-                command.latencyThresholdMillis() != null ? command.latencyThresholdMillis() : 2000)
-            .build();
+    CheckPolicy policy = mapper.toPolicyDomain(command);
+    policy.setEndpointId(savedEndpoint.getId());
 
     CheckPolicy savedPolicy = checkPolicyRepository.save(policy);
     savedEndpoint.setPolicy(savedPolicy);
 
-    return mapToDto(savedEndpoint, savedPolicy);
+    return mapper.toDto(savedEndpoint, savedPolicy);
   }
 
   @Override
@@ -91,7 +75,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
     CheckPolicy savedPolicy = checkPolicyRepository.save(policy);
     savedEndpoint.setPolicy(savedPolicy);
 
-    return mapToDto(savedEndpoint, savedPolicy);
+    return mapper.toDto(savedEndpoint, savedPolicy);
   }
 
   @Override
@@ -101,7 +85,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Endpoint not found with id: " + id));
     CheckPolicy policy = checkPolicyRepository.findByEndpointId(id).orElse(null);
-    return mapToDto(endpoint, policy);
+    return mapper.toDto(endpoint, policy);
   }
 
   @Override
@@ -111,7 +95,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
             endpoint -> {
               CheckPolicy policy =
                   checkPolicyRepository.findByEndpointId(endpoint.getId()).orElse(null);
-              return mapToDto(endpoint, policy);
+              return mapper.toDto(endpoint, policy);
             })
         .collect(Collectors.toList());
   }
@@ -120,24 +104,5 @@ public class ManageEndpointService implements ManageEndpointUseCase {
   public void deleteEndpoint(Long id) {
     checkPolicyRepository.deleteByEndpointId(id);
     endpointRepository.deleteById(id);
-  }
-
-  private EndpointDto mapToDto(MonitoredEndpoint endpoint, CheckPolicy policy) {
-    return new EndpointDto(
-        endpoint.getId(),
-        endpoint.getName(),
-        endpoint.getUrl(),
-        endpoint.getMethod(),
-        endpoint.getEnvironment(),
-        endpoint.getCheckType(),
-        endpoint.getExpectedStatusCode(),
-        endpoint.getIsActive(),
-        endpoint.getCreatedAt(),
-        endpoint.getUpdatedAt(),
-        policy != null ? policy.getIntervalSeconds() : null,
-        policy != null ? policy.getTimeoutMillis() : null,
-        policy != null ? policy.getRetryCount() : null,
-        policy != null ? policy.getFailureThreshold() : null,
-        policy != null ? policy.getLatencyThresholdMillis() : null);
   }
 }
