@@ -1,0 +1,55 @@
+{
+  "error": {
+    "40001": "Invalid input data.",
+    "40010": "This endpoint already exists in the system.",
+    "40011": "Invalid endpoint URL.",
+    "40401": "Requested resource not found.",
+    "50000": "An unexpected system error occurred. Please try again later."
+  },
+  "validation": {
+    "endpoint": {
+      "id": {
+        "not_null": "Endpoint ID is required."
+      },
+      "name": {
+        "not_blank": "Endpoint name cannot be blank."
+      },
+      "url": {
+        "not_blank": "URL cannot be blank.",
+        "invalid": "URL must start with http:// or https://"
+      },
+      "method": {
+        "not_null": "HTTP method is required."
+      },
+      "checkType": {
+        "not_null": "Check type is required."
+      },
+      "intervalSeconds": {
+        "not_null": "Check interval is required.",
+        "min": "Check interval must be at least 5 seconds."
+      },
+      "timeoutMillis": {
+        "not_null": "Timeout is required.",
+        "min": "Timeout must be at least 100ms."
+      },
+      "retryCount": {
+        "not_null": "Retry count is required.",
+        "min": "Retry count cannot be negative."
+      },
+      "failureThreshold": {
+        "not_null": "Failure threshold is required.",
+        "min": "Failure threshold must be at least 1."
+      }
+    }
+  },
+  "common": {
+    "success": "Success.",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create"
+  }
+}
