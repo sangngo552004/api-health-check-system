@@ -64,6 +64,7 @@ Nếu còn thời gian, có thể bổ sung:
 - `HealthCheckResult`: kết quả của một lần kiểm tra.
 - `Incident`: sự cố được ghi nhận khi endpoint gặp lỗi liên tục hoặc downtime.
 - `AlertRule`: quy tắc xác định khi nào phát cảnh báo.
+- `ContactGroup`: nhóm nhận thông báo cảnh báo (email, webhook, users).
 - `Notification`: thông tin cảnh báo đã gửi.
 - `User`: người dùng hệ thống.
 
@@ -327,20 +328,23 @@ frontend/
 - `method`
 - `environment`
 - `check_type`
-- `expected_status_code`
 - `is_active`
 - `created_at`
 - `updated_at`
+- `policy_id`
 
 ### 10.2. Bảng `check_policies`
 
 - `id`
-- `endpoint_id`
 - `interval_seconds`
 - `timeout_millis`
 - `retry_count`
 - `failure_threshold`
 - `latency_threshold_millis`
+- `expected_status_code`
+- `expected_response_body`
+- `response_regex`
+- `created_by`
 
 ### 10.3. Bảng `health_check_results`
 
@@ -351,6 +355,8 @@ frontend/
 - `http_status_code`
 - `response_time_millis`
 - `error_message`
+- `response_payload`
+- `node_id`
 - `success`
 
 ### 10.4. Bảng `incidents`
@@ -367,10 +373,21 @@ frontend/
 - `id`
 - `name`
 - `rule_type`
+- `operator`
 - `threshold_value`
 - `is_active`
+- `override_default_contacts`
+- `created_by`
 
-### 10.6. Bảng `notifications`
+### 10.6. Bảng `contact_groups`
+
+- `id`
+- `name`
+- `description`
+- `is_active`
+- `created_by`
+
+### 10.7. Bảng `notifications`
 
 - `id`
 - `incident_id`
@@ -380,10 +397,12 @@ frontend/
 - `sent_at`
 - `status`
 
-### 10.7. Bảng `users`
+### 10.8. Bảng `users`
 
 - `id`
 - `username`
+- `email`
+- `phone_number`
 - `password_hash`
 - `role`
 - `is_active`
