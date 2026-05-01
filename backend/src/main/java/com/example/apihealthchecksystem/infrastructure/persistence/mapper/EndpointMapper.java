@@ -2,24 +2,14 @@ package com.example.apihealthchecksystem.infrastructure.persistence.mapper;
 
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
 import com.example.apihealthchecksystem.infrastructure.persistence.entity.MonitoredEndpointJpaEntity;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.Mapping;
 
-@Mapper(
-    componentModel = "spring",
-    uses = {CheckPolicyMapper.class})
+@Mapper(componentModel = "spring")
 public interface EndpointMapper {
+
+  @Mapping(target = "alertRuleIds", ignore = true) // Sẽ xử lý riêng ở Repository nếu cần
   MonitoredEndpoint toDomain(MonitoredEndpointJpaEntity entity);
 
-  MonitoredEndpointJpaEntity toJpaEntity(MonitoredEndpoint domain);
-
-  // MapStruct automatically maps nested properties if there are available mappers,
-  // but for bidirectional associations in JPA, we need to set the parent reference on the child.
-  @AfterMapping
-  default void linkPolicy(@MappingTarget MonitoredEndpointJpaEntity entity) {
-    if (entity.getPolicy() != null) {
-      entity.getPolicy().setEndpoint(entity);
-    }
-  }
+  MonitoredEndpointJpaEntity toEntity(MonitoredEndpoint domain);
 }

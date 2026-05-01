@@ -2,17 +2,17 @@ package com.example.apihealthchecksystem.infrastructure.persistence.entity;
 
 import com.example.apihealthchecksystem.domain.valueobject.CheckType;
 import com.example.apihealthchecksystem.domain.valueobject.HttpMethod;
-import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,10 +27,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class MonitoredEndpointJpaEntity extends BaseJpaEntity {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -49,24 +45,41 @@ public class MonitoredEndpointJpaEntity extends BaseJpaEntity {
   @Column(name = "check_type", nullable = false, length = 50)
   private CheckType checkType;
 
-  @Column(name = "expected_status_code")
-  private Integer expectedStatusCode;
+  @Column(name = "is_active")
+  private Boolean isActive;
 
-  @Column(name = "is_active", nullable = false)
-  @Builder.Default
-  private Boolean isActive = true;
+  @Column(name = "status")
+  private String status;
 
-  @OneToOne(
-      mappedBy = "endpoint",
-      cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      orphanRemoval = true)
-  private CheckPolicyJpaEntity policy;
+  @Column(name = "policy_id")
+  private Long policyId;
 
-  public void setPolicy(CheckPolicyJpaEntity policy) {
-    if (policy != null) {
-      policy.setEndpoint(this);
-    }
-    this.policy = policy;
-  }
+  @ElementCollection
+  @CollectionTable(name = "endpoint_headers", joinColumns = @JoinColumn(name = "endpoint_id"))
+  @MapKeyColumn(name = "header_key")
+  @Column(name = "header_value")
+  private Map<String, String> headers;
+
+  @Column(name = "request_body", columnDefinition = "TEXT")
+  private String requestBody;
+
+  @Column(name = "created_by")
+  private Long createdBy;
+
+  @ElementCollection
+  @CollectionTable(name = "endpoint_tags", joinColumns = @JoinColumn(name = "endpoint_id"))
+  @Column(name = "tag")
+  private List<String> tags;
+
+  @ElementCollection
+  @CollectionTable(name = "endpoint_alert_rules", joinColumns = @JoinColumn(name = "endpoint_id"))
+  @Column(name = "alert_rule_id")
+  private List<Long> alertRuleIds;
+
+  @ElementCollection
+  @CollectionTable(
+      name = "endpoint_contact_groups",
+      joinColumns = @JoinColumn(name = "endpoint_id"))
+  @Column(name = "contact_group_id")
+  private List<Long> contactGroupIds;
 }

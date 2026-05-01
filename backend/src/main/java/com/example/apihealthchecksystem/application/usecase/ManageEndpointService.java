@@ -9,6 +9,7 @@ import com.example.apihealthchecksystem.application.port.out.CheckPolicyReposito
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
 import com.example.apihealthchecksystem.domain.model.CheckPolicy;
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
+import com.example.apihealthchecksystem.domain.valueobject.EndpointStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,18 +25,20 @@ public class ManageEndpointService implements ManageEndpointUseCase {
   @Override
   public EndpointDto createEndpoint(EndpointCreateCommand command) {
     MonitoredEndpoint endpoint = mapper.toDomain(command);
+    endpoint.setStatus(EndpointStatus.UP);
     endpoint.setCreatedAt(LocalDateTime.now());
     endpoint.setUpdatedAt(LocalDateTime.now());
 
+    // Giả định userId được lấy từ Security Context (hiện tại fix cứng 1L để demo)
+    endpoint.setCreatedBy(1L);
+
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
+    CheckPolicy policy =
+        checkPolicyRepository
+            .findById(savedEndpoint.getPolicyId())
+            .orElseThrow(() -> new IllegalArgumentException("Policy template not found"));
 
-    CheckPolicy policy = mapper.toPolicyDomain(command);
-    policy.setEndpointId(savedEndpoint.getId());
-
-    CheckPolicy savedPolicy = checkPolicyRepository.save(policy);
-    savedEndpoint.setPolicy(savedPolicy);
-
-    return mapper.toDto(savedEndpoint, savedPolicy);
+    return mapper.toDto(savedEndpoint, policy);
   }
 
   @Override
@@ -51,31 +54,21 @@ public class ManageEndpointService implements ManageEndpointUseCase {
     endpoint.setMethod(command.method());
     endpoint.setEnvironment(command.environment());
     endpoint.setCheckType(command.checkType());
-    endpoint.setExpectedStatusCode(command.expectedStatusCode());
+    endpoint.setPolicyId(command.policyId());
+    endpoint.setAlertRuleIds(command.alertRuleIds());
+    endpoint.setTags(command.tags());
+    endpoint.setHeaders(command.headers());
+    endpoint.setRequestBody(command.requestBody());
+
     if (command.isActive() != null) {
       endpoint.setIsActive(command.isActive());
     }
     endpoint.setUpdatedAt(LocalDateTime.now());
 
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
+    CheckPolicy policy = checkPolicyRepository.findById(savedEndpoint.getPolicyId()).orElse(null);
 
-    CheckPolicy policy =
-        checkPolicyRepository
-            .findByEndpointId(command.id())
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException("Policy not found for endpoint: " + command.id()));
-
-    policy.setIntervalSeconds(command.intervalSeconds());
-    policy.setTimeoutMillis(command.timeoutMillis());
-    policy.setRetryCount(command.retryCount());
-    policy.setFailureThreshold(command.failureThreshold());
-    policy.setLatencyThresholdMillis(command.latencyThresholdMillis());
-
-    CheckPolicy savedPolicy = checkPolicyRepository.save(policy);
-    savedEndpoint.setPolicy(savedPolicy);
-
-    return mapper.toDto(savedEndpoint, savedPolicy);
+    return mapper.toDto(savedEndpoint, policy);
   }
 
   @Override
@@ -84,7 +77,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
         endpointRepository
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Endpoint not found with id: " + id));
-    CheckPolicy policy = checkPolicyRepository.findByEndpointId(id).orElse(null);
+    CheckPolicy policy = checkPolicyRepository.findById(endpoint.getPolicyId()).orElse(null);
     return mapper.toDto(endpoint, policy);
   }
 
@@ -94,7 +87,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
         .map(
             endpoint -> {
               CheckPolicy policy =
-                  checkPolicyRepository.findByEndpointId(endpoint.getId()).orElse(null);
+                  checkPolicyRepository.findById(endpoint.getPolicyId()).orElse(null);
               return mapper.toDto(endpoint, policy);
             })
         .collect(Collectors.toList());
@@ -102,7 +95,6 @@ public class ManageEndpointService implements ManageEndpointUseCase {
 
   @Override
   public void deleteEndpoint(Long id) {
-    checkPolicyRepository.deleteByEndpointId(id);
     endpointRepository.deleteById(id);
   }
 }

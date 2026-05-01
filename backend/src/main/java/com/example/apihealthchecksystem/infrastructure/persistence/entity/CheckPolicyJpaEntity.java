@@ -2,35 +2,18 @@ package com.example.apihealthchecksystem.infrastructure.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "check_policies")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class CheckPolicyJpaEntity {
+public class CheckPolicyJpaEntity extends BaseJpaEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "endpoint_id", nullable = false)
-  private MonitoredEndpointJpaEntity endpoint;
+  @Column(nullable = false)
+  private String name;
 
   @Column(name = "interval_seconds", nullable = false)
   private Integer intervalSeconds;
@@ -46,4 +29,16 @@ public class CheckPolicyJpaEntity {
 
   @Column(name = "latency_threshold_millis")
   private Integer latencyThresholdMillis;
+
+  @Column(name = "expected_status_code")
+  private Integer expectedStatusCode;
+
+  @Column(name = "expected_response_body", columnDefinition = "TEXT")
+  private String expectedResponseBody;
+
+  @Column(name = "response_regex")
+  private String responseRegex;
+
+  @Column(name = "created_by")
+  private Long createdBy;
 }
