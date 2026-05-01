@@ -6,7 +6,7 @@ import java.util.Optional;
 public interface CheckPolicyRepository {
   CheckPolicy save(CheckPolicy policy);
 
-  Optional<CheckPolicy> findByEndpointId(Long endpointId);
+  Optional<CheckPolicy> findById(Long id);
 
-  void deleteByEndpointId(Long endpointId);
+  void deleteById(Long id);
 }

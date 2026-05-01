@@ -1,40 +1,28 @@
 package com.example.apihealthchecksystem.infrastructure.persistence.entity;
 
+import com.example.apihealthchecksystem.domain.valueobject.IncidentSeverity;
 import com.example.apihealthchecksystem.domain.valueobject.IncidentStatus;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import java.util.List;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "incidents")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class IncidentJpaEntity {
+public class IncidentJpaEntity extends BaseJpaEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "endpoint_id", nullable = false)
-  private MonitoredEndpointJpaEntity endpoint;
+  @Column(name = "endpoint_id", nullable = false)
+  private Long endpointId;
 
   @Column(name = "started_at", nullable = false)
   private LocalDateTime startedAt;
@@ -48,4 +36,21 @@ public class IncidentJpaEntity {
 
   @Column(columnDefinition = "TEXT")
   private String reason;
+
+  @Column(name = "failure_count")
+  private Integer failureCount;
+
+  @Enumerated(EnumType.STRING)
+  @Column(length = 20)
+  private IncidentSeverity severity;
+
+  @Column(name = "root_cause", columnDefinition = "TEXT")
+  private String rootCause;
+
+  @ElementCollection
+  @CollectionTable(
+      name = "incident_failing_results",
+      joinColumns = @JoinColumn(name = "incident_id"))
+  @Column(name = "result_id")
+  private List<Long> failingResultIds;
 }
