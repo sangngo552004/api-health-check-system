@@ -25,4 +25,8 @@ public class CheckPolicy {
 
   /** Người quản trị tạo ra template này. */
   private Long createdBy;
+
+  private Long workspaceId;
+  private java.time.LocalDateTime createdAt;
+  private java.time.LocalDateTime updatedAt;
 }

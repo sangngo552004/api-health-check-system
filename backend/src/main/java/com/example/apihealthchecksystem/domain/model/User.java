@@ -15,5 +15,6 @@ public class User {
   private String passwordHash;
   private UserRole role;
   private Boolean isActive;
+  private Boolean requiresPasswordChange;
   private LocalDateTime createdAt;
 }

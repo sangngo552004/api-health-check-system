@@ -1,13 +1,13 @@
 package com.example.apihealthchecksystem.application.mapper;
 
-import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
-import com.example.apihealthchecksystem.application.dto.EndpointDto;
+import com.example.apihealthchecksystem.application.dto.request.EndpointCreateCommand;
+import com.example.apihealthchecksystem.application.dto.response.EndpointDto;
 import com.example.apihealthchecksystem.domain.model.CheckPolicy;
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface EndpointDtoMapper {
 
   @Mapping(target = "id", ignore = true)
@@ -15,7 +15,8 @@ public interface EndpointDtoMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "isActive", constant = "true")
-  @Mapping(target = "createdBy", ignore = true) // Sẽ gán từ Security Context
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "contactGroupIds", ignore = true)
   MonitoredEndpoint toDomain(EndpointCreateCommand command);
 
   @Mapping(target = "id", source = "endpoint.id")
@@ -35,5 +36,6 @@ public interface EndpointDtoMapper {
   @Mapping(target = "retryCount", source = "policy.retryCount")
   @Mapping(target = "failureThreshold", source = "policy.failureThreshold")
   @Mapping(target = "latencyThresholdMillis", source = "policy.latencyThresholdMillis")
+  @Mapping(target = "workspaceId", source = "endpoint.workspaceId")
   EndpointDto toDto(MonitoredEndpoint endpoint, CheckPolicy policy);
 }

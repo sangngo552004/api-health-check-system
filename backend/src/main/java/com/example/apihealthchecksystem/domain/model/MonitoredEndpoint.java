@@ -22,6 +22,7 @@ public class MonitoredEndpoint {
   private EndpointStatus status;
   private List<String> tags;
   private Long policyId;
+  private Long workspaceId;
   private List<Long> alertRuleIds;
   private List<Long> contactGroupIds;
   private Map<String, String> headers;

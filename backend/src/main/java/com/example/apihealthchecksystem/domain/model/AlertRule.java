@@ -19,5 +19,7 @@ public class AlertRule {
   private List<Long> contactGroupIds;
   private Boolean overrideDefaultContacts;
   private Long createdBy;
+  private Long workspaceId;
   private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 }

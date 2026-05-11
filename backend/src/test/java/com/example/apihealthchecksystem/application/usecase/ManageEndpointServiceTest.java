@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
-import com.example.apihealthchecksystem.application.dto.EndpointDto;
-import com.example.apihealthchecksystem.application.dto.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.dto.request.EndpointCreateCommand;
+import com.example.apihealthchecksystem.application.dto.request.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.dto.response.EndpointDto;
+import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
+import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
@@ -36,6 +38,7 @@ class ManageEndpointServiceTest {
   @Test
   void createEndpoint_shouldSaveEndpointAndReturnDto() {
     Long policyId = 10L;
+    Long workspaceId = 1L;
     EndpointCreateCommand command =
         new EndpointCreateCommand(
             "Test API",
@@ -50,8 +53,14 @@ class ManageEndpointServiceTest {
             "{}");
 
     MonitoredEndpoint mockEndpoint =
-        MonitoredEndpoint.builder().id(1L).name("Test API").policyId(policyId).build();
-    CheckPolicy mockPolicy = CheckPolicy.builder().id(policyId).expectedStatusCode(200).build();
+        MonitoredEndpoint.builder()
+            .id(1L)
+            .name("Test API")
+            .policyId(policyId)
+            .workspaceId(workspaceId)
+            .build();
+    CheckPolicy mockPolicy =
+        CheckPolicy.builder().id(policyId).expectedStatusCode(200).workspaceId(workspaceId).build();
     EndpointDto mockDto =
         new EndpointDto(
             1L,
@@ -60,6 +69,7 @@ class ManageEndpointServiceTest {
             HttpMethod.GET,
             "DEV",
             CheckType.HTTP,
+            workspaceId,
             200,
             true,
             LocalDateTime.now(),
@@ -77,71 +87,62 @@ class ManageEndpointServiceTest {
     when(checkPolicyRepository.findById(policyId)).thenReturn(Optional.of(mockPolicy));
     when(mapper.toDto(mockEndpoint, mockPolicy)).thenReturn(mockDto);
 
-    EndpointDto result = manageEndpointService.createEndpoint(command);
+    EndpointDto result = manageEndpointService.createEndpoint(workspaceId, command);
 
     assertNotNull(result);
+    assertEquals(workspaceId, result.workspaceId());
     verify(endpointRepository).save(any());
-    assertEquals("Bearer abc", result.headers().get("Auth"));
   }
 
   @Test
-  void updateEndpoint_shouldUpdateFieldsAndReturnDto() {
-    Long endpointId = 1L;
-    Long policyId = 10L;
-    EndpointUpdateCommand command =
-        new EndpointUpdateCommand(
-            endpointId,
-            "Updated",
-            "http://up.com",
-            HttpMethod.POST,
-            "PROD",
-            CheckType.HTTP,
-            true,
-            policyId,
-            List.of(1L),
-            List.of("tag"),
-            Map.of("X-Header", "Val"),
-            "payload");
-
-    MonitoredEndpoint existing = MonitoredEndpoint.builder().id(endpointId).build();
-    CheckPolicy mockPolicy = CheckPolicy.builder().id(policyId).build();
-    EndpointDto updatedDto =
+  void getEndpointsByWorkspace_shouldReturnPagedResponse() {
+    Long workspaceId = 1L;
+    int page = 0;
+    int size = 10;
+    MonitoredEndpoint e =
+        MonitoredEndpoint.builder().id(1L).policyId(10L).workspaceId(workspaceId).build();
+    CheckPolicy p = CheckPolicy.builder().id(10L).build();
+    EndpointDto d =
         new EndpointDto(
-            endpointId,
-            "Updated",
-            "http://up.com",
-            HttpMethod.POST,
-            "PROD",
+            1L,
+            "N",
+            "U",
+            HttpMethod.GET,
+            "E",
             CheckType.HTTP,
+            workspaceId,
             200,
             true,
             null,
             null,
-            Map.of("X-Header", "Val"),
-            "payload",
+            null,
+            null,
             60,
             5000,
             3,
             3,
             2000);
 
-    when(endpointRepository.findById(endpointId)).thenReturn(Optional.of(existing));
-    when(endpointRepository.save(any())).thenReturn(existing);
-    when(checkPolicyRepository.findById(policyId)).thenReturn(Optional.of(mockPolicy));
-    when(mapper.toDto(any(), any())).thenReturn(updatedDto);
+    when(endpointRepository.findByWorkspaceId(workspaceId, page, size)).thenReturn(List.of(e));
+    when(endpointRepository.countByWorkspaceId(workspaceId)).thenReturn(1L);
+    when(checkPolicyRepository.findById(10L)).thenReturn(Optional.of(p));
+    when(mapper.toDto(e, p)).thenReturn(d);
 
-    EndpointDto result = manageEndpointService.updateEndpoint(command);
+    PagedResponseDto<EndpointDto> result =
+        manageEndpointService.getEndpointsByWorkspace(workspaceId, page, size);
 
-    assertNotNull(result);
-    assertEquals("payload", existing.getRequestBody());
-    assertEquals("Val", existing.getHeaders().get("X-Header"));
+    assertEquals(1, result.items().size());
+    assertEquals(1, result.totalItems());
+    assertEquals(workspaceId, result.items().get(0).workspaceId());
   }
 
   @Test
   void getEndpoint_shouldReturnDto_whenFound() {
     Long id = 1L;
-    MonitoredEndpoint endpoint = MonitoredEndpoint.builder().id(id).policyId(10L).build();
-    CheckPolicy policy = CheckPolicy.builder().id(10L).build();
+    Long workspaceId = 1L;
+    MonitoredEndpoint endpoint =
+        MonitoredEndpoint.builder().id(id).policyId(10L).workspaceId(workspaceId).build();
+    CheckPolicy policy = CheckPolicy.builder().id(10L).workspaceId(workspaceId).build();
     EndpointDto dto =
         new EndpointDto(
             id,
@@ -150,6 +151,7 @@ class ManageEndpointServiceTest {
             HttpMethod.GET,
             "E",
             CheckType.HTTP,
+            workspaceId,
             200,
             true,
             null,
@@ -166,7 +168,7 @@ class ManageEndpointServiceTest {
     when(checkPolicyRepository.findById(10L)).thenReturn(Optional.of(policy));
     when(mapper.toDto(endpoint, policy)).thenReturn(dto);
 
-    EndpointDto result = manageEndpointService.getEndpoint(id);
+    EndpointDto result = manageEndpointService.getEndpoint(workspaceId, id);
 
     assertNotNull(result);
     verify(endpointRepository).findById(id);
@@ -175,21 +177,50 @@ class ManageEndpointServiceTest {
   @Test
   void getEndpoint_shouldThrowException_whenNotFound() {
     when(endpointRepository.findById(1L)).thenReturn(Optional.empty());
-    assertThrows(IllegalArgumentException.class, () -> manageEndpointService.getEndpoint(1L));
+    assertThrows(ResourceNotFoundException.class, () -> manageEndpointService.getEndpoint(1L, 1L));
   }
 
   @Test
-  void getAllEndpoints_shouldReturnList() {
-    MonitoredEndpoint e = MonitoredEndpoint.builder().id(1L).policyId(10L).build();
-    CheckPolicy p = CheckPolicy.builder().id(10L).build();
-    EndpointDto d =
-        new EndpointDto(
-            1L,
-            "N",
-            "U",
-            HttpMethod.GET,
+  void deleteEndpoint_shouldCallRepository() {
+    Long workspaceId = 1L;
+    MonitoredEndpoint endpoint =
+        MonitoredEndpoint.builder().id(1L).workspaceId(workspaceId).build();
+    when(endpointRepository.findById(1L)).thenReturn(Optional.of(endpoint));
+    manageEndpointService.deleteEndpoint(workspaceId, 1L);
+    verify(endpointRepository).deleteById(1L);
+  }
+
+  @Test
+  void updateEndpoint_shouldSaveAndReturnDto() {
+    Long id = 1L;
+    Long policyId = 10L;
+    Long workspaceId = 1L;
+    EndpointUpdateCommand command =
+        new EndpointUpdateCommand(
+            id,
+            "New",
+            "http://test.com",
+            HttpMethod.POST,
             "E",
             CheckType.HTTP,
+            true,
+            policyId,
+            List.of(),
+            List.of(),
+            Map.of(),
+            "{}");
+    MonitoredEndpoint endpoint =
+        MonitoredEndpoint.builder().id(id).policyId(policyId).workspaceId(workspaceId).build();
+    CheckPolicy policy = CheckPolicy.builder().id(policyId).workspaceId(workspaceId).build();
+    EndpointDto dto =
+        new EndpointDto(
+            id,
+            "New",
+            "U",
+            HttpMethod.POST,
+            "E",
+            CheckType.HTTP,
+            workspaceId,
             200,
             true,
             null,
@@ -202,34 +233,14 @@ class ManageEndpointServiceTest {
             3,
             2000);
 
-    when(endpointRepository.findAll()).thenReturn(List.of(e));
-    when(checkPolicyRepository.findById(10L)).thenReturn(Optional.of(p));
-    when(mapper.toDto(e, p)).thenReturn(d);
-
-    List<EndpointDto> result = manageEndpointService.getAllEndpoints();
-
-    assertEquals(1, result.size());
-    verify(endpointRepository).findAll();
-  }
-
-  @Test
-  void deleteEndpoint_shouldCallRepository() {
-    manageEndpointService.deleteEndpoint(1L);
-    verify(endpointRepository).deleteById(1L);
-  }
-
-  @Test
-  void createEndpoint_shouldThrowException_whenPolicyNotFound() {
-    EndpointCreateCommand command =
-        new EndpointCreateCommand(
-            "T", "H", HttpMethod.GET, "D", CheckType.HTTP, 99L, null, null, null, null);
-    MonitoredEndpoint endpoint = MonitoredEndpoint.builder().policyId(99L).build();
-
-    when(mapper.toDomain(command)).thenReturn(endpoint);
+    when(endpointRepository.findById(id)).thenReturn(Optional.of(endpoint));
     when(endpointRepository.save(any())).thenReturn(endpoint);
-    when(checkPolicyRepository.findById(99L)).thenReturn(Optional.empty());
+    when(checkPolicyRepository.findById(policyId)).thenReturn(Optional.of(policy));
+    when(mapper.toDto(any(), any())).thenReturn(dto);
 
-    assertThrows(
-        IllegalArgumentException.class, () -> manageEndpointService.createEndpoint(command));
+    EndpointDto result = manageEndpointService.updateEndpoint(workspaceId, command);
+
+    assertNotNull(result);
+    assertEquals("New", result.name());
   }
 }

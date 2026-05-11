@@ -16,6 +16,9 @@ public class HealthCheckResultJpaEntity extends BaseJpaEntity {
   @Column(name = "endpoint_id", nullable = false)
   private Long endpointId;
 
+  @Column(name = "workspace_id", nullable = false)
+  private Long workspaceId;
+
   @Column(name = "checked_at", nullable = false)
   private LocalDateTime checkedAt;
 
