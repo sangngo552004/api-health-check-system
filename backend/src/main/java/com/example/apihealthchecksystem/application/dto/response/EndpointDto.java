@@ -1,4 +1,4 @@
-package com.example.apihealthchecksystem.application.dto;
+package com.example.apihealthchecksystem.application.dto.response;
 
 import com.example.apihealthchecksystem.domain.valueobject.CheckType;
 import com.example.apihealthchecksystem.domain.valueobject.HttpMethod;
@@ -12,6 +12,7 @@ public record EndpointDto(
     HttpMethod method,
     String environment,
     CheckType checkType,
+    Long workspaceId,
     Integer expectedStatusCode,
     Boolean isActive,
     LocalDateTime createdAt,

@@ -16,6 +16,7 @@ public class ContactGroup {
   private List<String> webhookUrls;
   private Boolean isActive;
   private Long createdBy;
+  private Long workspaceId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

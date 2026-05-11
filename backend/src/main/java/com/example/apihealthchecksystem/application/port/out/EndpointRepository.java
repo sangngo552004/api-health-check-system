@@ -11,5 +11,11 @@ public interface EndpointRepository {
 
   List<MonitoredEndpoint> findAll();
 
+  List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId, int page, int size);
+
+  long countByWorkspaceId(Long workspaceId);
+
   void deleteById(Long id);
+
+  boolean existsById(Long id);
 }

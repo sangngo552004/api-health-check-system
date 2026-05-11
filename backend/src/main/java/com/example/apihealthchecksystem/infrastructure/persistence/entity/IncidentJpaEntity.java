@@ -24,6 +24,9 @@ public class IncidentJpaEntity extends BaseJpaEntity {
   @Column(name = "endpoint_id", nullable = false)
   private Long endpointId;
 
+  @Column(name = "workspace_id", nullable = false)
+  private Long workspaceId;
+
   @Column(name = "started_at", nullable = false)
   private LocalDateTime startedAt;
 

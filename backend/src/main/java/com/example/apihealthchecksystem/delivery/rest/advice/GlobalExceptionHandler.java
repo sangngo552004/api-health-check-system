@@ -1,8 +1,9 @@
-package com.example.apihealthchecksystem.delivery.rest.common;
+package com.example.apihealthchecksystem.delivery.rest.advice;
 
 import com.example.apihealthchecksystem.application.exception.AppErrorCode;
 import com.example.apihealthchecksystem.application.exception.AppException;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
+import com.example.apihealthchecksystem.delivery.rest.common.ApiResponse;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

@@ -1,0 +1,14 @@
+-- V6: Đồng bộ Schema cho HealthCheckResults và Incidents
+
+-- 1. Cập nhật bảng health_check_results
+ALTER TABLE health_check_results ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE health_check_results ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE health_check_results ADD COLUMN IF NOT EXISTS response_payload TEXT;
+ALTER TABLE health_check_results ADD COLUMN IF NOT EXISTS node_id VARCHAR(255);
+
+-- 2. Cập nhật bảng incidents
+ALTER TABLE incidents ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE incidents ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE incidents ADD COLUMN IF NOT EXISTS severity VARCHAR(50) DEFAULT 'CRITICAL';
+ALTER TABLE incidents ADD COLUMN IF NOT EXISTS root_cause TEXT;
+ALTER TABLE incidents ADD COLUMN IF NOT EXISTS failing_results JSONB;

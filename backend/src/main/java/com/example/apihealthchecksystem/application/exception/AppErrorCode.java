@@ -11,7 +11,11 @@ public enum AppErrorCode {
 
   // Endpoint Errors
   ENDPOINT_ALREADY_EXISTS("40010", "Endpoint này đã tồn tại trong hệ thống"),
-  ENDPOINT_INVALID_URL("40011", "URL endpoint không hợp lệ");
+  ENDPOINT_INVALID_URL("40011", "URL endpoint không hợp lệ"),
+
+  // Security Errors
+  ACCESS_DENIED("40301", "Không có quyền truy cập tài nguyên này"),
+  UNAUTHORIZED("40101", "Phiên đăng nhập không hợp lệ hoặc đã hết hạn");
 
   private final String code;
   private final String message;

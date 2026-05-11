@@ -1,8 +1,11 @@
 package com.example.apihealthchecksystem.application.usecase;
 
-import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
-import com.example.apihealthchecksystem.application.dto.EndpointDto;
-import com.example.apihealthchecksystem.application.dto.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.dto.request.EndpointCreateCommand;
+import com.example.apihealthchecksystem.application.dto.request.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.dto.response.EndpointDto;
+import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
+import com.example.apihealthchecksystem.application.exception.AccessDeniedException;
+import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageEndpointUseCase;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
@@ -14,8 +17,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ManageEndpointService implements ManageEndpointUseCase {
 
   private final EndpointRepository endpointRepository;
@@ -23,8 +28,10 @@ public class ManageEndpointService implements ManageEndpointUseCase {
   private final EndpointDtoMapper mapper;
 
   @Override
-  public EndpointDto createEndpoint(EndpointCreateCommand command) {
+  @Transactional
+  public EndpointDto createEndpoint(Long workspaceId, EndpointCreateCommand command) {
     MonitoredEndpoint endpoint = mapper.toDomain(command);
+    endpoint.setWorkspaceId(workspaceId);
     endpoint.setStatus(EndpointStatus.UP);
     endpoint.setCreatedAt(LocalDateTime.now());
     endpoint.setUpdatedAt(LocalDateTime.now());
@@ -36,18 +43,27 @@ public class ManageEndpointService implements ManageEndpointUseCase {
     CheckPolicy policy =
         checkPolicyRepository
             .findById(savedEndpoint.getPolicyId())
-            .orElseThrow(() -> new IllegalArgumentException("Policy template not found"));
+            .orElseThrow(
+                () -> new ResourceNotFoundException("CheckPolicy", savedEndpoint.getPolicyId()));
+
+    if (!policy.getWorkspaceId().equals(workspaceId)) {
+      throw new AccessDeniedException("CheckPolicy không thuộc về Workspace này.");
+    }
 
     return mapper.toDto(savedEndpoint, policy);
   }
 
   @Override
-  public EndpointDto updateEndpoint(EndpointUpdateCommand command) {
+  @Transactional
+  public EndpointDto updateEndpoint(Long workspaceId, EndpointUpdateCommand command) {
     MonitoredEndpoint endpoint =
         endpointRepository
             .findById(command.id())
-            .orElseThrow(
-                () -> new IllegalArgumentException("Endpoint not found with id: " + command.id()));
+            .orElseThrow(() -> new ResourceNotFoundException("MonitoredEndpoint", command.id()));
+
+    if (!endpoint.getWorkspaceId().equals(workspaceId)) {
+      throw new AccessDeniedException("Endpoint không thuộc về Workspace này.");
+    }
 
     endpoint.setName(command.name());
     endpoint.setUrl(command.url());
@@ -67,34 +83,59 @@ public class ManageEndpointService implements ManageEndpointUseCase {
 
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
     CheckPolicy policy = checkPolicyRepository.findById(savedEndpoint.getPolicyId()).orElse(null);
+    if (policy != null && !policy.getWorkspaceId().equals(workspaceId)) {
+      throw new AccessDeniedException("CheckPolicy không thuộc về Workspace này.");
+    }
 
     return mapper.toDto(savedEndpoint, policy);
   }
 
   @Override
-  public EndpointDto getEndpoint(Long id) {
+  public EndpointDto getEndpoint(Long workspaceId, Long id) {
     MonitoredEndpoint endpoint =
         endpointRepository
             .findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Endpoint not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("MonitoredEndpoint", id));
+
+    if (!endpoint.getWorkspaceId().equals(workspaceId)) {
+      throw new AccessDeniedException("Endpoint không thuộc về Workspace này.");
+    }
     CheckPolicy policy = checkPolicyRepository.findById(endpoint.getPolicyId()).orElse(null);
     return mapper.toDto(endpoint, policy);
   }
 
   @Override
-  public List<EndpointDto> getAllEndpoints() {
-    return endpointRepository.findAll().stream()
-        .map(
-            endpoint -> {
-              CheckPolicy policy =
-                  checkPolicyRepository.findById(endpoint.getPolicyId()).orElse(null);
-              return mapper.toDto(endpoint, policy);
-            })
-        .collect(Collectors.toList());
+  public PagedResponseDto<EndpointDto> getEndpointsByWorkspace(
+      Long workspaceId, int page, int size) {
+    List<MonitoredEndpoint> endpoints =
+        endpointRepository.findByWorkspaceId(workspaceId, page, size);
+    long total = endpointRepository.countByWorkspaceId(workspaceId);
+
+    List<EndpointDto> dtos =
+        endpoints.stream()
+            .map(
+                endpoint -> {
+                  CheckPolicy policy =
+                      checkPolicyRepository.findById(endpoint.getPolicyId()).orElse(null);
+                  return mapper.toDto(endpoint, policy);
+                })
+            .collect(Collectors.toList());
+
+    return PagedResponseDto.of(dtos, page, size, total);
   }
 
   @Override
-  public void deleteEndpoint(Long id) {
+  @Transactional
+  public void deleteEndpoint(Long workspaceId, Long id) {
+    MonitoredEndpoint endpoint =
+        endpointRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("MonitoredEndpoint", id));
+
+    if (!endpoint.getWorkspaceId().equals(workspaceId)) {
+      throw new AccessDeniedException("Endpoint không thuộc về Workspace này.");
+    }
+
     endpointRepository.deleteById(id);
   }
 }

@@ -1,18 +1,18 @@
 package com.example.apihealthchecksystem.application.port.in;
 
-import com.example.apihealthchecksystem.application.dto.EndpointCreateCommand;
-import com.example.apihealthchecksystem.application.dto.EndpointDto;
-import com.example.apihealthchecksystem.application.dto.EndpointUpdateCommand;
-import java.util.List;
+import com.example.apihealthchecksystem.application.dto.request.EndpointCreateCommand;
+import com.example.apihealthchecksystem.application.dto.request.EndpointUpdateCommand;
+import com.example.apihealthchecksystem.application.dto.response.EndpointDto;
+import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 
 public interface ManageEndpointUseCase {
-  EndpointDto createEndpoint(EndpointCreateCommand command);
+  EndpointDto createEndpoint(Long workspaceId, EndpointCreateCommand command);
 
-  EndpointDto updateEndpoint(EndpointUpdateCommand command);
+  EndpointDto updateEndpoint(Long workspaceId, EndpointUpdateCommand command);
 
-  EndpointDto getEndpoint(Long id);
+  EndpointDto getEndpoint(Long workspaceId, Long id);
 
-  List<EndpointDto> getAllEndpoints();
+  PagedResponseDto<EndpointDto> getEndpointsByWorkspace(Long workspaceId, int page, int size);
 
-  void deleteEndpoint(Long id);
+  void deleteEndpoint(Long workspaceId, Long id);
 }

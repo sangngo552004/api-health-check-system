@@ -39,4 +39,8 @@ public class UserJpaEntity extends BaseJpaEntity {
 
   @Column(name = "is_active")
   private Boolean isActive;
+
+  @Column(name = "requires_password_change", nullable = false)
+  @Builder.Default
+  private Boolean requiresPasswordChange = true;
 }

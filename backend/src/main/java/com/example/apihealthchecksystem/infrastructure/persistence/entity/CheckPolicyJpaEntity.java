@@ -41,4 +41,7 @@ public class CheckPolicyJpaEntity extends BaseJpaEntity {
 
   @Column(name = "created_by")
   private Long createdBy;
+
+  @Column(name = "workspace_id", nullable = false)
+  private Long workspaceId;
 }

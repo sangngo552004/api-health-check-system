@@ -45,6 +45,9 @@ public class MonitoredEndpointJpaEntity extends BaseJpaEntity {
   @Column(name = "check_type", nullable = false, length = 50)
   private CheckType checkType;
 
+  @Column(name = "workspace_id", nullable = false)
+  private Long workspaceId;
+
   @Column(name = "is_active")
   private Boolean isActive;
 

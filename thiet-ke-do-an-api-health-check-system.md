@@ -59,11 +59,14 @@ Nếu còn thời gian, có thể bổ sung:
 
 ### 3.2. Các thực thể nghiệp vụ chính
 
-- `MonitoredEndpoint`: đại diện cho một API hoặc dịch vụ cần theo dõi.
+- `Workspace`: Đại diện cho một dự án, một nhóm (Team), hoặc một tập hợp các Microservice để phân lập dữ liệu (Team-based API Grouping).
+- `WorkspaceMember`: Người dùng thuộc về một Workspace, với các quyền hạn cụ thể (VD: ADMIN, MEMBER).
+- `MonitoredEndpoint`: đại diện cho một API hoặc dịch vụ cần theo dõi thuộc về một Workspace.
 - `CheckPolicy`: cấu hình cách thức kiểm tra, chu kỳ, timeout, retry, ngưỡng cảnh báo.
 - `HealthCheckResult`: kết quả của một lần kiểm tra.
 - `Incident`: sự cố được ghi nhận khi endpoint gặp lỗi liên tục hoặc downtime.
 - `AlertRule`: quy tắc xác định khi nào phát cảnh báo.
+- `ContactGroup`: nhóm nhận thông báo cảnh báo (email, webhook, users) trong phạm vi Workspace.
 - `Notification`: thông tin cảnh báo đã gửi.
 - `User`: người dùng hệ thống.
 
@@ -327,20 +330,23 @@ frontend/
 - `method`
 - `environment`
 - `check_type`
-- `expected_status_code`
 - `is_active`
 - `created_at`
 - `updated_at`
+- `policy_id`
 
 ### 10.2. Bảng `check_policies`
 
 - `id`
-- `endpoint_id`
 - `interval_seconds`
 - `timeout_millis`
 - `retry_count`
 - `failure_threshold`
 - `latency_threshold_millis`
+- `expected_status_code`
+- `expected_response_body`
+- `response_regex`
+- `created_by`
 
 ### 10.3. Bảng `health_check_results`
 
@@ -351,6 +357,8 @@ frontend/
 - `http_status_code`
 - `response_time_millis`
 - `error_message`
+- `response_payload`
+- `node_id`
 - `success`
 
 ### 10.4. Bảng `incidents`
@@ -367,10 +375,21 @@ frontend/
 - `id`
 - `name`
 - `rule_type`
+- `operator`
 - `threshold_value`
 - `is_active`
+- `override_default_contacts`
+- `created_by`
 
-### 10.6. Bảng `notifications`
+### 10.6. Bảng `contact_groups`
+
+- `id`
+- `name`
+- `description`
+- `is_active`
+- `created_by`
+
+### 10.7. Bảng `notifications`
 
 - `id`
 - `incident_id`
@@ -380,10 +399,12 @@ frontend/
 - `sent_at`
 - `status`
 
-### 10.7. Bảng `users`
+### 10.8. Bảng `users`
 
 - `id`
 - `username`
+- `email`
+- `phone_number`
 - `password_hash`
 - `role`
 - `is_active`
@@ -424,19 +445,21 @@ frontend/
 
 ### 12.1. Các màn hình chính
 
-- Trang tổng quan dashboard
+- Trang Global Dashboard (Dành cho Admin xem tổng thể toàn hệ thống)
+- Trang Team Dashboard (Tổng quan các API trong phạm vi Workspace của team)
+- Trang danh sách Workspace & Quản lý thành viên
 - Trang danh sách endpoint
 - Trang chi tiết endpoint
 - Trang danh sách incident
-- Trang cấu hình rule cảnh báo
+- Trang cấu hình rule cảnh báo & Contact Group
 - Trang đăng nhập
 
 ### 12.2. Nội dung dashboard tổng quan
 
-- Thẻ thống kê tổng số endpoint
+- Thẻ thống kê tổng số endpoint (theo Workspace hoặc Toàn hệ thống)
 - Thẻ thống kê trạng thái `UP`, `DOWN`, `DEGRADED`
 - Biểu đồ response time theo thời gian
-- Danh sách endpoint lỗi gần đây
+- Danh sách endpoint lỗi gần đây (của team mình)
 - Danh sách incident đang mở
 - Bảng lịch sử health check gần nhất
 
