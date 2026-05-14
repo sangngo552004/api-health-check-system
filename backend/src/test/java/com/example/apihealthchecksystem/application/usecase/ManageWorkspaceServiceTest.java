@@ -7,6 +7,8 @@ import static org.mockito.Mockito.*;
 import com.example.apihealthchecksystem.application.dto.request.WorkspaceCreateCommand;
 import com.example.apihealthchecksystem.application.dto.request.WorkspaceUpdateCommand;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
+import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
+import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.domain.model.Workspace;
 import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ManageWorkspaceServiceTest {
 
   @Mock private WorkspaceRepository workspaceRepository;
+  @Mock private UserRepository userRepository;
 
   @InjectMocks private ManageWorkspaceService service;
 
@@ -79,20 +82,33 @@ class ManageWorkspaceServiceTest {
   }
 
   @Test
+  void getWorkspace_shouldThrow_whenNotFound() {
+    when(workspaceRepository.findById(10L)).thenReturn(Optional.empty());
+
+    assertThrows(ResourceNotFoundException.class, () -> service.getWorkspace(10L));
+  }
+
+  @Test
   void deleteWorkspace_shouldCallRepository() {
     Long id = 10L;
+    when(workspaceRepository.findById(id))
+        .thenReturn(Optional.of(Workspace.builder().id(id).build()));
     service.deleteWorkspace(id);
     verify(workspaceRepository).deleteById(id);
   }
 
   @Test
   void addMember_shouldCallRepository() {
+    when(workspaceRepository.findById(10L))
+        .thenReturn(Optional.of(Workspace.builder().id(10L).build()));
     service.addMember(10L, 2L, "MEMBER");
     verify(workspaceRepository).addMember(10L, 2L, WorkspaceRole.MEMBER);
   }
 
   @Test
   void removeMember_shouldCallRepository() {
+    when(workspaceRepository.findById(10L))
+        .thenReturn(Optional.of(Workspace.builder().id(10L).build()));
     service.removeMember(10L, 2L);
     verify(workspaceRepository).removeMember(10L, 2L);
   }
@@ -100,6 +116,8 @@ class ManageWorkspaceServiceTest {
   @Test
   void getMembers_shouldReturnList() {
     Long id = 10L;
+    when(workspaceRepository.findById(id))
+        .thenReturn(Optional.of(Workspace.builder().id(id).build()));
     when(workspaceRepository.getMembers(id)).thenReturn(java.util.List.of());
     service.getMembers(id);
     verify(workspaceRepository).getMembers(id);

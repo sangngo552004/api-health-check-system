@@ -11,6 +11,8 @@ public interface EndpointRepository {
 
   List<MonitoredEndpoint> findAll();
 
+  List<MonitoredEndpoint> findAllActive();
+
   List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId, int page, int size);
 
   long countByWorkspaceId(Long workspaceId);

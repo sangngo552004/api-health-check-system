@@ -4,22 +4,28 @@ import com.example.apihealthchecksystem.application.dto.request.WorkspaceCreateC
 import com.example.apihealthchecksystem.application.dto.request.WorkspaceUpdateCommand;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceMemberDto;
+import com.example.apihealthchecksystem.application.exception.AppErrorCode;
+import com.example.apihealthchecksystem.application.exception.AppException;
+import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.port.in.ManageWorkspaceUseCase;
+import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
+import com.example.apihealthchecksystem.domain.model.User;
 import com.example.apihealthchecksystem.domain.model.Workspace;
+import com.example.apihealthchecksystem.domain.model.WorkspaceMember;
 import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class ManageWorkspaceService implements ManageWorkspaceUseCase {
 
   private final WorkspaceRepository workspaceRepository;
+  private final UserRepository userRepository;
 
   @Override
-  @Transactional
   public WorkspaceDto createWorkspace(WorkspaceCreateCommand command, Long userId) {
     Workspace workspace =
         Workspace.builder()
@@ -37,12 +43,8 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
   }
 
   @Override
-  @Transactional
   public WorkspaceDto updateWorkspace(WorkspaceUpdateCommand command) {
-    Workspace workspace =
-        workspaceRepository
-            .findById(command.id())
-            .orElseThrow(() -> new RuntimeException("Workspace not found"));
+    Workspace workspace = getWorkspaceById(command.id());
 
     workspace.setName(command.name());
     workspace.setDescription(command.description());
@@ -54,16 +56,11 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
   }
 
   @Override
-  @Transactional(readOnly = true)
   public WorkspaceDto getWorkspace(Long id) {
-    return workspaceRepository
-        .findById(id)
-        .map(this::toDto)
-        .orElseThrow(() -> new RuntimeException("Workspace not found"));
+    return toDto(getWorkspaceById(id));
   }
 
   @Override
-  @Transactional(readOnly = true)
   public List<WorkspaceDto> getMyWorkspaces(Long userId) {
     return workspaceRepository.findByUserId(userId).stream()
         .map(this::toDto)
@@ -71,33 +68,61 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
   }
 
   @Override
-  @Transactional
   public void deleteWorkspace(Long id) {
+    getWorkspaceById(id);
     workspaceRepository.deleteById(id);
   }
 
   @Override
-  @Transactional
   public void addMember(Long workspaceId, Long userId, String role) {
-    WorkspaceRole workspaceRole = WorkspaceRole.valueOf(role.toUpperCase());
+    getWorkspaceById(workspaceId);
+    WorkspaceRole workspaceRole = parseWorkspaceRole(role);
     workspaceRepository.addMember(workspaceId, userId, workspaceRole);
   }
 
   @Override
-  @Transactional
   public void removeMember(Long workspaceId, Long userId) {
+    getWorkspaceById(workspaceId);
     workspaceRepository.removeMember(workspaceId, userId);
   }
 
   @Override
-  @Transactional(readOnly = true)
   public List<WorkspaceMemberDto> getMembers(Long workspaceId) {
-    return workspaceRepository.getMembers(workspaceId).stream()
+    getWorkspaceById(workspaceId);
+    var members = workspaceRepository.getMembers(workspaceId);
+    var userIds = members.stream().map(WorkspaceMember::getUserId).collect(Collectors.toList());
+
+    Map<Long, User> userMap =
+        userRepository.findAllByIds(userIds).stream()
+            .collect(Collectors.toMap(User::getId, u -> u));
+
+    return members.stream()
         .map(
-            m ->
-                new WorkspaceMemberDto(
-                    m.getUserId(), m.getUsername(), m.getEmail(), m.getRole(), m.getJoinedAt()))
+            m -> {
+              User user = userMap.get(m.getUserId());
+              return new WorkspaceMemberDto(
+                  m.getUserId(),
+                  user != null ? user.getUsername() : "Unknown",
+                  user != null ? user.getEmail() : "Unknown",
+                  m.getRole(),
+                  m.getJoinedAt());
+            })
         .collect(Collectors.toList());
+  }
+
+  private Workspace getWorkspaceById(Long workspaceId) {
+    return workspaceRepository
+        .findById(workspaceId)
+        .orElseThrow(
+            () -> new ResourceNotFoundException(AppErrorCode.WORKSPACE_NOT_FOUND, workspaceId));
+  }
+
+  private WorkspaceRole parseWorkspaceRole(String role) {
+    try {
+      return WorkspaceRole.valueOf(role.toUpperCase());
+    } catch (IllegalArgumentException ex) {
+      throw new AppException(AppErrorCode.INVALID_WORKSPACE_MEMBER_ROLE);
+    }
   }
 
   private WorkspaceDto toDto(Workspace workspace) {

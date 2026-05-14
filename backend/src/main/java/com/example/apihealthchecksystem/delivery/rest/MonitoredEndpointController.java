@@ -6,6 +6,7 @@ import com.example.apihealthchecksystem.application.dto.response.EndpointDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.port.in.ManageEndpointUseCase;
 import com.example.apihealthchecksystem.delivery.rest.common.ApiResponse;
+import com.example.apihealthchecksystem.delivery.rest.common.security.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,9 @@ public class MonitoredEndpointController {
   @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> createEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
+      @CurrentUserId Long currentUserId,
       @Valid @RequestBody EndpointCreateCommand command) {
-    return ApiResponse.success(endpointUseCase.createEndpoint(workspaceId, command));
+    return ApiResponse.success(endpointUseCase.createEndpoint(workspaceId, currentUserId, command));
   }
 
   @PutMapping("/{id}")

@@ -39,6 +39,7 @@ class ManageEndpointServiceTest {
   void createEndpoint_shouldSaveEndpointAndReturnDto() {
     Long policyId = 10L;
     Long workspaceId = 1L;
+    Long currentUserId = 99L;
     EndpointCreateCommand command =
         new EndpointCreateCommand(
             "Test API",
@@ -87,11 +88,12 @@ class ManageEndpointServiceTest {
     when(checkPolicyRepository.findById(policyId)).thenReturn(Optional.of(mockPolicy));
     when(mapper.toDto(mockEndpoint, mockPolicy)).thenReturn(mockDto);
 
-    EndpointDto result = manageEndpointService.createEndpoint(workspaceId, command);
+    EndpointDto result = manageEndpointService.createEndpoint(workspaceId, currentUserId, command);
 
     assertNotNull(result);
     assertEquals(workspaceId, result.workspaceId());
-    verify(endpointRepository).save(any());
+    verify(endpointRepository)
+        .save(argThat(endpoint -> currentUserId.equals(endpoint.getCreatedBy())));
   }
 
   @Test

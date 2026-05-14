@@ -10,8 +10,6 @@ import lombok.Data;
 public class WorkspaceMember {
   private Long workspaceId;
   private Long userId;
-  private String username;
-  private String email;
   private WorkspaceRole role;
   private LocalDateTime joinedAt;
 }

@@ -20,9 +20,6 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
 
   private final WorkspaceJpaRepository jpaRepository;
   private final WorkspaceMemberJpaRepository memberJpaRepository;
-  private final com.example.apihealthchecksystem.infrastructure.persistence.repository
-          .UserJpaRepository
-      userJpaRepository;
   private final WorkspaceMapper mapper;
 
   @Override
@@ -80,17 +77,13 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
       Long workspaceId) {
     return memberJpaRepository.findByIdWorkspaceId(workspaceId).stream()
         .map(
-            member -> {
-              var user = userJpaRepository.findById(member.getId().getUserId()).orElseThrow();
-              return com.example.apihealthchecksystem.domain.model.WorkspaceMember.builder()
-                  .workspaceId(workspaceId)
-                  .userId(user.getId())
-                  .username(user.getUsername())
-                  .email(user.getEmail())
-                  .role(WorkspaceRole.valueOf(member.getRole()))
-                  .joinedAt(member.getJoinedAt())
-                  .build();
-            })
+            member ->
+                com.example.apihealthchecksystem.domain.model.WorkspaceMember.builder()
+                    .workspaceId(workspaceId)
+                    .userId(member.getId().getUserId())
+                    .role(WorkspaceRole.valueOf(member.getRole()))
+                    .joinedAt(member.getJoinedAt())
+                    .build())
         .collect(Collectors.toList());
   }
 }

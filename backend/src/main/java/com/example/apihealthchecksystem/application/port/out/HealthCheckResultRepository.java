@@ -7,4 +7,6 @@ public interface HealthCheckResultRepository {
   HealthCheckResult save(HealthCheckResult result);
 
   List<HealthCheckResult> findByEndpointId(Long endpointId);
+
+  List<HealthCheckResult> findTop10ByEndpointIdOrderByCheckedAtDesc(Long endpointId);
 }

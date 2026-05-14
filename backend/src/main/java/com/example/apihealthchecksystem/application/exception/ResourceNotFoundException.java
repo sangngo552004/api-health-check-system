@@ -5,6 +5,10 @@ public class ResourceNotFoundException extends AppException {
     super(AppErrorCode.RESOURCE_NOT_FOUND);
   }
 
+  public ResourceNotFoundException(AppErrorCode errorCode, Object identifier) {
+    super(errorCode, String.format("%s với định danh: %s", errorCode.getMessage(), identifier));
+  }
+
   public ResourceNotFoundException(String resourceName, Object identifier) {
     super(
         AppErrorCode.RESOURCE_NOT_FOUND,

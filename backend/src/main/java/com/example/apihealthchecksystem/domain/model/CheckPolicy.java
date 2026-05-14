@@ -1,5 +1,6 @@
 package com.example.apihealthchecksystem.domain.model;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,20 +14,11 @@ public class CheckPolicy {
   private Integer retryCount;
   private Integer failureThreshold;
   private Integer latencyThresholdMillis;
-
-  /** HTTP Status Code mong đợi (ví dụ: 200, 201). Chuyển từ Endpoint sang Template. */
   private Integer expectedStatusCode;
-
-  /** Nội dung phản hồi mong đợi (chuỗi cố định). */
   private String expectedResponseBody;
-
-  /** Biểu thức chính quy để kiểm tra nội dung phản hồi. */
   private String responseRegex;
-
-  /** Người quản trị tạo ra template này. */
   private Long createdBy;
-
   private Long workspaceId;
-  private java.time.LocalDateTime createdAt;
-  private java.time.LocalDateTime updatedAt;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 }

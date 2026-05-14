@@ -10,11 +10,16 @@ import com.example.apihealthchecksystem.application.port.in.ManageCheckPolicyUse
 import com.example.apihealthchecksystem.application.port.in.ManageContactGroupUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageEndpointUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageWorkspaceUseCase;
+import com.example.apihealthchecksystem.application.port.in.MonitorEndpointUseCase;
 import com.example.apihealthchecksystem.application.port.out.AlertRuleRepository;
 import com.example.apihealthchecksystem.application.port.out.AuthenticationPort;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
 import com.example.apihealthchecksystem.application.port.out.ContactGroupRepository;
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
+import com.example.apihealthchecksystem.application.port.out.HealthCheckExecutor;
+import com.example.apihealthchecksystem.application.port.out.HealthCheckResultRepository;
+import com.example.apihealthchecksystem.application.port.out.IncidentRepository;
+import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.application.usecase.AuthService;
 import com.example.apihealthchecksystem.application.usecase.ManageAlertRuleService;
@@ -22,6 +27,9 @@ import com.example.apihealthchecksystem.application.usecase.ManageCheckPolicySer
 import com.example.apihealthchecksystem.application.usecase.ManageContactGroupService;
 import com.example.apihealthchecksystem.application.usecase.ManageEndpointService;
 import com.example.apihealthchecksystem.application.usecase.ManageWorkspaceService;
+import com.example.apihealthchecksystem.application.usecase.MonitorEndpointService;
+import java.util.List;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -60,7 +68,25 @@ public class UseCaseConfig {
   }
 
   @Bean
-  public ManageWorkspaceUseCase manageWorkspaceUseCase(WorkspaceRepository workspaceRepository) {
-    return new ManageWorkspaceService(workspaceRepository);
+  public ManageWorkspaceUseCase manageWorkspaceUseCase(
+      WorkspaceRepository workspaceRepository, UserRepository userRepository) {
+    return new ManageWorkspaceService(workspaceRepository, userRepository);
+  }
+
+  @Bean
+  public MonitorEndpointUseCase monitorEndpointUseCase(
+      EndpointRepository endpointRepository,
+      CheckPolicyRepository checkPolicyRepository,
+      List<HealthCheckExecutor> executors,
+      HealthCheckResultRepository resultRepository,
+      IncidentRepository incidentRepository,
+      ApplicationEventPublisher eventPublisher) {
+    return new MonitorEndpointService(
+        endpointRepository,
+        checkPolicyRepository,
+        executors,
+        resultRepository,
+        incidentRepository,
+        eventPublisher);
   }
 }

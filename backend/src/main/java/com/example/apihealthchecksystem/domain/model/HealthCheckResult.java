@@ -10,6 +10,7 @@ import lombok.Data;
 public class HealthCheckResult {
   private Long id;
   private Long endpointId;
+  private Long workspaceId;
   private LocalDateTime checkedAt;
   private CheckStatus status;
   private Integer httpStatusCode;

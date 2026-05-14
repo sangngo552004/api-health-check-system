@@ -404,7 +404,7 @@
     "/api/v1/alert-rules/{id}" : {
       "get" : {
         "tags" : [ "alert-rule-controller" ],
-        "operationId" : "getById_2",
+        "operationId" : "getAlertRule",
         "parameters" : [ {
           "name" : "X-Workspace-Id",
           "in" : "header",
@@ -437,7 +437,7 @@
       },
       "put" : {
         "tags" : [ "alert-rule-controller" ],
-        "operationId" : "update_2",
+        "operationId" : "updateAlertRule",
         "parameters" : [ {
           "name" : "X-Workspace-Id",
           "in" : "header",
@@ -480,7 +480,7 @@
       },
       "delete" : {
         "tags" : [ "alert-rule-controller" ],
-        "operationId" : "delete_2",
+        "operationId" : "deleteAlertRule",
         "parameters" : [ {
           "name" : "X-Workspace-Id",
           "in" : "header",
@@ -833,10 +833,66 @@
         }
       }
     },
+    "/api/v1/auth/refresh" : {
+      "post" : {
+        "tags" : [ "auth-controller" ],
+        "operationId" : "refreshToken",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TokenRefreshRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseLoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login" : {
+      "post" : {
+        "tags" : [ "auth-controller" ],
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseLoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/alert-rules" : {
       "get" : {
         "tags" : [ "alert-rule-controller" ],
-        "operationId" : "getByWorkspace_2",
+        "operationId" : "getAlertRules",
         "parameters" : [ {
           "name" : "X-Workspace-Id",
           "in" : "header",
@@ -879,7 +935,7 @@
       },
       "post" : {
         "tags" : [ "alert-rule-controller" ],
-        "operationId" : "create_2",
+        "operationId" : "createAlertRule",
         "parameters" : [ {
           "name" : "X-Workspace-Id",
           "in" : "header",
@@ -1686,6 +1742,71 @@
           }
         },
         "required" : [ "failureThreshold", "intervalSeconds", "name", "retryCount", "timeoutMillis" ]
+      },
+      "TokenRefreshRequest" : {
+        "type" : "object",
+        "properties" : {
+          "refreshToken" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "refreshToken" ]
+      },
+      "ApiResponseLoginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/LoginResponse"
+          },
+          "errors" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "LoginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "refreshToken" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "requiresPasswordChange" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "username" ]
       },
       "AlertRuleCreateCommand" : {
         "type" : "object",

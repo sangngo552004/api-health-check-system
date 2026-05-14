@@ -12,6 +12,7 @@ import lombok.Data;
 public class Incident {
   private Long id;
   private Long endpointId;
+  private Long workspaceId;
   private LocalDateTime startedAt;
   private LocalDateTime resolvedAt;
   private IncidentStatus status;

@@ -42,7 +42,9 @@ public class WorkspaceController {
   @PreAuthorize("@workspaceSecurity.isAdmin(#id, authentication.principal.id)")
   public ApiResponse<WorkspaceDto> updateWorkspace(
       @PathVariable Long id, @Valid @RequestBody WorkspaceUpdateCommand command) {
-    return ApiResponse.success(workspaceUseCase.updateWorkspace(command));
+    WorkspaceUpdateCommand withId =
+        new WorkspaceUpdateCommand(id, command.name(), command.description(), command.isActive());
+    return ApiResponse.success(workspaceUseCase.updateWorkspace(withId));
   }
 
   @GetMapping("/{id}")

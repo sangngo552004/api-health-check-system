@@ -5,6 +5,7 @@ import com.example.apihealthchecksystem.application.dto.request.ContactGroupUpda
 import com.example.apihealthchecksystem.application.dto.response.ContactGroupDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.exception.AccessDeniedException;
+import com.example.apihealthchecksystem.application.exception.AppErrorCode;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.mapper.ContactGroupDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageContactGroupUseCase;
@@ -13,17 +14,14 @@ import com.example.apihealthchecksystem.domain.model.ContactGroup;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ManageContactGroupService implements ManageContactGroupUseCase {
 
   private final ContactGroupRepository repository;
   private final ContactGroupDtoMapper mapper;
 
   @Override
-  @Transactional
   public ContactGroupDto createContactGroup(Long workspaceId, ContactGroupCreateCommand command) {
     ContactGroup group = mapper.toDomain(command);
     group.setWorkspaceId(workspaceId);
@@ -31,16 +29,9 @@ public class ManageContactGroupService implements ManageContactGroupUseCase {
   }
 
   @Override
-  @Transactional
   public ContactGroupDto updateContactGroup(Long workspaceId, ContactGroupUpdateCommand command) {
-    ContactGroup existing =
-        repository
-            .findById(command.id())
-            .orElseThrow(() -> new ResourceNotFoundException("ContactGroup", command.id()));
-
-    if (!existing.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("ContactGroup không thuộc về Workspace này.");
-    }
+    ContactGroup existing = getContactGroupById(command.id());
+    validateWorkspaceAccess(existing.getWorkspaceId(), workspaceId);
 
     existing.setName(command.name());
     existing.setDescription(command.description());
@@ -56,14 +47,8 @@ public class ManageContactGroupService implements ManageContactGroupUseCase {
 
   @Override
   public ContactGroupDto getContactGroup(Long workspaceId, Long id) {
-    ContactGroup group =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("ContactGroup", id));
-
-    if (!group.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("ContactGroup không thuộc về Workspace này.");
-    }
+    ContactGroup group = getContactGroupById(id);
+    validateWorkspaceAccess(group.getWorkspaceId(), workspaceId);
 
     return mapper.toDto(group);
   }
@@ -80,16 +65,24 @@ public class ManageContactGroupService implements ManageContactGroupUseCase {
   }
 
   @Override
-  @Transactional
   public void deleteContactGroup(Long workspaceId, Long id) {
-    ContactGroup group =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("ContactGroup", id));
-
-    if (!group.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("ContactGroup không thuộc về Workspace này.");
-    }
+    ContactGroup group = getContactGroupById(id);
+    validateWorkspaceAccess(group.getWorkspaceId(), workspaceId);
     repository.deleteById(id);
+  }
+
+  private ContactGroup getContactGroupById(Long contactGroupId) {
+    return repository
+        .findById(contactGroupId)
+        .orElseThrow(
+            () ->
+                new ResourceNotFoundException(
+                    AppErrorCode.CONTACT_GROUP_NOT_FOUND, contactGroupId));
+  }
+
+  private void validateWorkspaceAccess(Long resourceWorkspaceId, Long requestedWorkspaceId) {
+    if (!resourceWorkspaceId.equals(requestedWorkspaceId)) {
+      throw new AccessDeniedException();
+    }
   }
 }

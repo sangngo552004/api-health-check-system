@@ -23,19 +23,13 @@ class WorkspaceRepositoryAdapterIT {
   @Autowired private WorkspaceJpaRepository jpaRepository;
   @Autowired private WorkspaceMemberJpaRepository memberJpaRepository;
 
-  @Autowired
-  private com.example.apihealthchecksystem.infrastructure.persistence.repository.UserJpaRepository
-      userJpaRepository;
-
   @Autowired private WorkspaceMapperImpl mapper;
 
   private WorkspaceRepositoryAdapter adapter;
 
   @BeforeEach
   void setUp() {
-    adapter =
-        new WorkspaceRepositoryAdapter(
-            jpaRepository, memberJpaRepository, userJpaRepository, mapper);
+    adapter = new WorkspaceRepositoryAdapter(jpaRepository, memberJpaRepository, mapper);
   }
 
   @Test

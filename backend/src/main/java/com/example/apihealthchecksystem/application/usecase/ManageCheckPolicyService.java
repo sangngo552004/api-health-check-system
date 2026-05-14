@@ -5,6 +5,7 @@ import com.example.apihealthchecksystem.application.dto.request.CheckPolicyUpdat
 import com.example.apihealthchecksystem.application.dto.response.CheckPolicyDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.exception.AccessDeniedException;
+import com.example.apihealthchecksystem.application.exception.AppErrorCode;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.mapper.CheckPolicyDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageCheckPolicyUseCase;
@@ -13,17 +14,14 @@ import com.example.apihealthchecksystem.domain.model.CheckPolicy;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
 
   private final CheckPolicyRepository repository;
   private final CheckPolicyDtoMapper mapper;
 
   @Override
-  @Transactional
   public CheckPolicyDto createPolicy(Long workspaceId, CheckPolicyCreateCommand command) {
     CheckPolicy policy = mapper.toDomain(command);
     policy.setWorkspaceId(workspaceId);
@@ -31,16 +29,9 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
   }
 
   @Override
-  @Transactional
   public CheckPolicyDto updatePolicy(Long workspaceId, CheckPolicyUpdateCommand command) {
-    CheckPolicy existing =
-        repository
-            .findById(command.id())
-            .orElseThrow(() -> new ResourceNotFoundException("CheckPolicy", command.id()));
-
-    if (!existing.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("CheckPolicy không thuộc về Workspace này.");
-    }
+    CheckPolicy existing = getPolicyById(command.id());
+    validateWorkspaceAccess(existing.getWorkspaceId(), workspaceId);
 
     existing.setName(command.name());
     existing.setIntervalSeconds(command.intervalSeconds());
@@ -57,12 +48,8 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
 
   @Override
   public CheckPolicyDto getPolicy(Long workspaceId, Long id) {
-    CheckPolicy policy =
-        repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("CheckPolicy", id));
-
-    if (!policy.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("CheckPolicy không thuộc về Workspace này.");
-    }
+    CheckPolicy policy = getPolicyById(id);
+    validateWorkspaceAccess(policy.getWorkspaceId(), workspaceId);
 
     return mapper.toDto(policy);
   }
@@ -79,14 +66,22 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
   }
 
   @Override
-  @Transactional
   public void deletePolicy(Long workspaceId, Long id) {
-    CheckPolicy policy =
-        repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("CheckPolicy", id));
-
-    if (!policy.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("CheckPolicy không thuộc về Workspace này.");
-    }
+    CheckPolicy policy = getPolicyById(id);
+    validateWorkspaceAccess(policy.getWorkspaceId(), workspaceId);
     repository.deleteById(id);
+  }
+
+  private CheckPolicy getPolicyById(Long policyId) {
+    return repository
+        .findById(policyId)
+        .orElseThrow(
+            () -> new ResourceNotFoundException(AppErrorCode.CHECK_POLICY_NOT_FOUND, policyId));
+  }
+
+  private void validateWorkspaceAccess(Long resourceWorkspaceId, Long requestedWorkspaceId) {
+    if (!resourceWorkspaceId.equals(requestedWorkspaceId)) {
+      throw new AccessDeniedException();
+    }
   }
 }

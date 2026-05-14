@@ -5,6 +5,7 @@ import com.example.apihealthchecksystem.application.dto.request.AlertRuleUpdateC
 import com.example.apihealthchecksystem.application.dto.response.AlertRuleDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.exception.AccessDeniedException;
+import com.example.apihealthchecksystem.application.exception.AppErrorCode;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.mapper.AlertRuleDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageAlertRuleUseCase;
@@ -13,17 +14,14 @@ import com.example.apihealthchecksystem.domain.model.AlertRule;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ManageAlertRuleService implements ManageAlertRuleUseCase {
 
   private final AlertRuleRepository repository;
   private final AlertRuleDtoMapper mapper;
 
   @Override
-  @Transactional
   public AlertRuleDto createAlertRule(Long workspaceId, AlertRuleCreateCommand command) {
     AlertRule rule = mapper.toDomain(command);
     rule.setWorkspaceId(workspaceId);
@@ -31,16 +29,9 @@ public class ManageAlertRuleService implements ManageAlertRuleUseCase {
   }
 
   @Override
-  @Transactional
   public AlertRuleDto updateAlertRule(Long workspaceId, AlertRuleUpdateCommand command) {
-    AlertRule existing =
-        repository
-            .findById(command.id())
-            .orElseThrow(() -> new ResourceNotFoundException("AlertRule", command.id()));
-
-    if (!existing.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("AlertRule không thuộc về Workspace này.");
-    }
+    AlertRule existing = getAlertRuleById(command.id());
+    validateWorkspaceAccess(existing.getWorkspaceId(), workspaceId);
 
     existing.setName(command.name());
     existing.setRuleType(command.ruleType());
@@ -57,12 +48,8 @@ public class ManageAlertRuleService implements ManageAlertRuleUseCase {
 
   @Override
   public AlertRuleDto getAlertRule(Long workspaceId, Long id) {
-    AlertRule rule =
-        repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("AlertRule", id));
-
-    if (!rule.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("AlertRule không thuộc về Workspace này.");
-    }
+    AlertRule rule = getAlertRuleById(id);
+    validateWorkspaceAccess(rule.getWorkspaceId(), workspaceId);
 
     return mapper.toDto(rule);
   }
@@ -79,14 +66,22 @@ public class ManageAlertRuleService implements ManageAlertRuleUseCase {
   }
 
   @Override
-  @Transactional
   public void deleteAlertRule(Long workspaceId, Long id) {
-    AlertRule rule =
-        repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("AlertRule", id));
-
-    if (!rule.getWorkspaceId().equals(workspaceId)) {
-      throw new AccessDeniedException("AlertRule không thuộc về Workspace này.");
-    }
+    AlertRule rule = getAlertRuleById(id);
+    validateWorkspaceAccess(rule.getWorkspaceId(), workspaceId);
     repository.deleteById(id);
+  }
+
+  private AlertRule getAlertRuleById(Long alertRuleId) {
+    return repository
+        .findById(alertRuleId)
+        .orElseThrow(
+            () -> new ResourceNotFoundException(AppErrorCode.ALERT_RULE_NOT_FOUND, alertRuleId));
+  }
+
+  private void validateWorkspaceAccess(Long resourceWorkspaceId, Long requestedWorkspaceId) {
+    if (!resourceWorkspaceId.equals(requestedWorkspaceId)) {
+      throw new AccessDeniedException();
+    }
   }
 }

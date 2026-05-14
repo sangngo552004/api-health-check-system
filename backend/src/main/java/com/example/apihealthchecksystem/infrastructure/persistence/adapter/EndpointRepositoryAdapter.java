@@ -33,6 +33,13 @@ public class EndpointRepositoryAdapter implements EndpointRepository {
   }
 
   @Override
+  public List<MonitoredEndpoint> findAllActive() {
+    return jpaRepository.findByIsActiveTrue().stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId, int page, int size) {
     org.springframework.data.domain.Pageable pageable =
         org.springframework.data.domain.PageRequest.of(page, size);

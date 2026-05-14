@@ -30,4 +30,5 @@ public class MonitoredEndpoint {
   private Long createdBy;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+  private LocalDateTime lastCheckedAt;
 }

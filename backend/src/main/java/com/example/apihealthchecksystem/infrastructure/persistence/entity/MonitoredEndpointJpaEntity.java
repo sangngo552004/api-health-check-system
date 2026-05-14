@@ -85,4 +85,7 @@ public class MonitoredEndpointJpaEntity extends BaseJpaEntity {
       joinColumns = @JoinColumn(name = "endpoint_id"))
   @Column(name = "contact_group_id")
   private List<Long> contactGroupIds;
+
+  @Column(name = "last_checked_at")
+  private java.time.LocalDateTime lastCheckedAt;
 }
