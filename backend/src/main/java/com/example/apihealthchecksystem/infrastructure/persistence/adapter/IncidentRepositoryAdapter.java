@@ -41,4 +41,11 @@ public class IncidentRepositoryAdapter implements IncidentRepository {
         .findFirstByEndpointIdAndStatusOrderByIdDesc(endpointId, IncidentStatus.OPEN)
         .map(mapper::toDomain);
   }
+
+  @Override
+  public List<Incident> findOpenIncidentsByWorkspaceId(Long workspaceId) {
+    return jpaRepository.findByWorkspaceIdAndStatus(workspaceId, IncidentStatus.OPEN).stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
 }

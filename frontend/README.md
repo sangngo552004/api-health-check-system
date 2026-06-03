@@ -1,15 +1,27 @@
 # Frontend
 
-Module frontend cho dashboard giám sát.
+Frontend là dashboard React + Vite cho luồng đăng nhập, chọn workspace, xem dashboard và thao tác CRUD với các tài nguyên giám sát chính.
 
 ## Chạy cục bộ
 
-1. Vào thư mục `frontend`.
-2. Cài dependency bằng `npm install`.
-3. Chạy `npm run dev`.
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-## Ghi chú
+Mặc định ứng dụng dev chạy qua Vite và gọi backend tại `http://localhost:8080/api/v1`.
 
-- Giai đoạn 2 chỉ dựng khung giao diện.
-- Chưa kết nối API thật.
-- Cấu trúc thư mục đã tách sẵn cho `pages`, `components`, `features`, `services`.
+## Thành phần chính
+
+- `context`: auth, workspace, theme.
+- `routes`: định nghĩa public/private route.
+- `features`: dashboard, endpoint, policy, alert, contact, member, auth.
+- `store`: Zustand store theo từng feature.
+- `services`: API client và các module gọi REST API.
+
+## Tài liệu chi tiết
+
+- [Thiết lập local](../docs/getting-started/local-development.md)
+- [Tài liệu frontend](../docs/engineering/frontend.md)
+- [API và OpenAPI](../docs/api/README.md)

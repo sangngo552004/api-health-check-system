@@ -28,7 +28,7 @@ public class IncidentAnalyzer {
     }
 
     HealthCheckResult latest = recentResults.get(0);
-    int failureThreshold = policy.getFailureThreshold() != null ? policy.getFailureThreshold() : 3;
+    int failureThreshold = policy.effectiveFailureThreshold();
 
     if (openIncident.isPresent() && latest.isUp()) {
       return new AnalysisResult(Decision.CLOSE_INCIDENT, "Endpoint đã phục hồi.");
@@ -92,5 +92,11 @@ public class IncidentAnalyzer {
         .severity(determineSeverity(consecutiveFailures))
         .failingResultIds(failingIds)
         .build();
+  }
+
+  public Incident buildNewIncident(
+      Long endpointId, Long workspaceId, String reason, List<HealthCheckResult> failingResults) {
+    return buildNewIncident(
+        endpointId, workspaceId, reason, failingResults, countConsecutiveFailures(failingResults));
   }
 }

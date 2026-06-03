@@ -21,4 +21,28 @@ public class CheckPolicy {
   private Long workspaceId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+
+  public int effectiveFailureThreshold() {
+    return failureThreshold != null ? failureThreshold : 3;
+  }
+
+  public int effectiveTimeoutMillis() {
+    return timeoutMillis != null ? timeoutMillis : 5000;
+  }
+
+  public int effectiveExpectedStatusCode() {
+    return expectedStatusCode != null ? expectedStatusCode : 200;
+  }
+
+  public boolean hasExpectedResponseBody() {
+    return expectedResponseBody != null && !expectedResponseBody.isBlank();
+  }
+
+  public boolean hasResponseRegex() {
+    return responseRegex != null && !responseRegex.isBlank();
+  }
+
+  public boolean hasLatencyThreshold() {
+    return latencyThresholdMillis != null;
+  }
 }

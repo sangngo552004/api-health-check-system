@@ -49,6 +49,13 @@ public class EndpointRepositoryAdapter implements EndpointRepository {
   }
 
   @Override
+  public List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId) {
+    return jpaRepository.findByWorkspaceId(workspaceId).stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public long countByWorkspaceId(Long workspaceId) {
     return jpaRepository.countByWorkspaceId(workspaceId);
   }

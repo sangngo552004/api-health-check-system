@@ -14,8 +14,6 @@ import com.example.apihealthchecksystem.domain.model.HealthCheckResult;
 import com.example.apihealthchecksystem.domain.model.Incident;
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
 import com.example.apihealthchecksystem.domain.service.IncidentAnalyzer;
-import com.example.apihealthchecksystem.domain.valueobject.CheckStatus;
-import com.example.apihealthchecksystem.domain.valueobject.EndpointStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -101,9 +99,7 @@ public class MonitorEndpointService implements MonitorEndpointUseCase {
     HealthCheckResult savedResult = resultRepository.save(result);
 
     // Cập nhật trạng thái mới nhất cho endpoint
-    EndpointStatus newStatus = mapToEndpointStatus(savedResult.getStatus());
-    endpoint.setStatus(newStatus);
-    endpoint.setLastCheckedAt(savedResult.getCheckedAt());
+    endpoint.markChecked(savedResult);
     endpointRepository.save(endpoint);
 
     // Phát sự kiện vừa check xong (để ghi log hoặc dashboard realtime)
@@ -130,11 +126,7 @@ public class MonitorEndpointService implements MonitorEndpointUseCase {
             "Phát hiện lỗi liên tục trên endpoint {}: {}", endpoint.getId(), analysis.reason());
         Incident newIncident =
             incidentAnalyzer.buildNewIncident(
-                endpoint.getId(),
-                endpoint.getWorkspaceId(),
-                analysis.reason(),
-                recentResults, // Đơn giản hóa, lấy list hiện tại
-                policy.getFailureThreshold() != null ? policy.getFailureThreshold() : 3);
+                endpoint.getId(), endpoint.getWorkspaceId(), analysis.reason(), recentResults);
 
         Incident savedIncident = incidentRepository.save(newIncident);
         eventPublisher.publishEvent(
@@ -150,15 +142,5 @@ public class MonitorEndpointService implements MonitorEndpointUseCase {
       }
       case NO_ACTION -> log.debug("Phân tích endpoint {}: {}", endpoint.getId(), analysis.reason());
     }
-  }
-
-  private EndpointStatus mapToEndpointStatus(CheckStatus checkStatus) {
-    if (checkStatus == CheckStatus.DOWN) {
-      return EndpointStatus.DOWN;
-    }
-    if (checkStatus == CheckStatus.DEGRADED) {
-      return EndpointStatus.DEGRADED;
-    }
-    return EndpointStatus.UP;
   }
 }

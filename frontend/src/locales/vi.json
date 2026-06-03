@@ -42,6 +42,19 @@
       }
     }
   },
+  "members": {
+    "subtitle": "Cấu hình Workspace",
+    "title": "Workspace Members",
+    "addBtn": "Mời thành viên",
+    "search": "Tìm kiếm theo tên hoặc Email...",
+    "listTitle": "Danh sách thành viên & Quyền hạn",
+    "desc": "Quản lý phân quyền nội bộ nhóm nhằm cách ly an toàn tài nguyên."
+  },
+  "api_errors": {
+    "40300": "Bạn không có quyền truy cập hoặc thực hiện thao tác này (Workspace Admin Only).",
+    "40001": "Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra lại Form.",
+    "40400": "Tài nguyên bạn yêu cầu không tồn tại hoặc đã bị xoá."
+  },
   "common": {
     "success": "Thành công.",
     "loading": "Đang tải...",

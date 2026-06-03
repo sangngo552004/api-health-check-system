@@ -11,6 +11,8 @@ public interface MonitoredEndpointJpaRepository
     extends JpaRepository<MonitoredEndpointJpaEntity, Long> {
   Page<MonitoredEndpointJpaEntity> findByWorkspaceId(Long workspaceId, Pageable pageable);
 
+  java.util.List<MonitoredEndpointJpaEntity> findByWorkspaceId(Long workspaceId);
+
   java.util.List<MonitoredEndpointJpaEntity> findByIsActiveTrue();
 
   long countByWorkspaceId(Long workspaceId);

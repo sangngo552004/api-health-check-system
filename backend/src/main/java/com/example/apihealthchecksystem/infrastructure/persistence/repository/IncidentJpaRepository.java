@@ -13,4 +13,6 @@ public interface IncidentJpaRepository extends JpaRepository<IncidentJpaEntity, 
 
   Optional<IncidentJpaEntity> findFirstByEndpointIdAndStatusOrderByIdDesc(
       Long endpointId, IncidentStatus status);
+
+  List<IncidentJpaEntity> findByWorkspaceIdAndStatus(Long workspaceId, IncidentStatus status);
 }

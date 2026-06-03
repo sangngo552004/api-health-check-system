@@ -89,4 +89,15 @@ public class UseCaseConfig {
         incidentRepository,
         eventPublisher);
   }
+
+  @Bean
+  public com.example.apihealthchecksystem.application.port.in.GetDashboardStatsUseCase
+      getDashboardStatsUseCase(
+          WorkspaceRepository workspaceRepository,
+          EndpointRepository endpointRepository,
+          IncidentRepository incidentRepository,
+          HealthCheckResultRepository resultRepository) {
+    return new com.example.apihealthchecksystem.application.usecase.GetDashboardStatsService(
+        workspaceRepository, endpointRepository, incidentRepository, resultRepository);
+  }
 }

@@ -13,7 +13,6 @@ import com.example.apihealthchecksystem.application.port.out.CheckPolicyReposito
 import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
 import com.example.apihealthchecksystem.domain.model.CheckPolicy;
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
-import com.example.apihealthchecksystem.domain.valueobject.EndpointStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,11 +32,7 @@ public class ManageEndpointService implements ManageEndpointUseCase {
     validateWorkspaceAccess(policy.getWorkspaceId(), workspaceId);
 
     MonitoredEndpoint endpoint = mapper.toDomain(command);
-    endpoint.setWorkspaceId(workspaceId);
-    endpoint.setStatus(EndpointStatus.UP);
-    endpoint.setCreatedAt(LocalDateTime.now());
-    endpoint.setUpdatedAt(LocalDateTime.now());
-    endpoint.setCreatedBy(currentUserId);
+    endpoint.initializeForCreation(workspaceId, currentUserId, LocalDateTime.now());
 
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
     return mapper.toDto(savedEndpoint, policy);
@@ -50,21 +45,19 @@ public class ManageEndpointService implements ManageEndpointUseCase {
     CheckPolicy policy = getCheckPolicy(command.policyId());
     validateWorkspaceAccess(policy.getWorkspaceId(), workspaceId);
 
-    endpoint.setName(command.name());
-    endpoint.setUrl(command.url());
-    endpoint.setMethod(command.method());
-    endpoint.setEnvironment(command.environment());
-    endpoint.setCheckType(command.checkType());
-    endpoint.setPolicyId(command.policyId());
-    endpoint.setAlertRuleIds(command.alertRuleIds());
-    endpoint.setTags(command.tags());
-    endpoint.setHeaders(command.headers());
-    endpoint.setRequestBody(command.requestBody());
-
-    if (command.isActive() != null) {
-      endpoint.setIsActive(command.isActive());
-    }
-    endpoint.setUpdatedAt(LocalDateTime.now());
+    endpoint.applyUpdates(
+        command.name(),
+        command.url(),
+        command.method(),
+        command.environment(),
+        command.checkType(),
+        command.policyId(),
+        command.alertRuleIds(),
+        command.tags(),
+        command.headers(),
+        command.requestBody(),
+        command.isActive(),
+        LocalDateTime.now());
 
     MonitoredEndpoint savedEndpoint = endpointRepository.save(endpoint);
     return mapper.toDto(savedEndpoint, policy);

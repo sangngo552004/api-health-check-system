@@ -12,4 +12,6 @@ public interface IncidentRepository {
   List<Incident> findByEndpointId(Long endpointId);
 
   Optional<Incident> findOpenIncidentByEndpointId(Long endpointId);
+
+  List<Incident> findOpenIncidentsByWorkspaceId(Long workspaceId);
 }

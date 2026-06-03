@@ -30,8 +30,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
     LocalDateTime checkedAt = LocalDateTime.now();
     long startTime = System.currentTimeMillis();
 
-    // Default timeout là 5000ms nếu policy không cấu hình
-    int timeoutMillis = policy.getTimeoutMillis() != null ? policy.getTimeoutMillis() : 5000;
+    int timeoutMillis = policy.effectiveTimeoutMillis();
 
     try {
       HttpClient client =
@@ -63,8 +62,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
       String errorMessage = null;
 
       // 1. Kiểm tra Status Code
-      int expectedStatus =
-          policy.getExpectedStatusCode() != null ? policy.getExpectedStatusCode() : 200;
+      int expectedStatus = policy.effectiveExpectedStatusCode();
       if (statusCode != expectedStatus && (expectedStatus != 200 || statusCode >= 400)) {
         success = false;
         errorMessage =
@@ -72,9 +70,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
       }
 
       // 2. Kiểm tra Response Body (nếu có cấu hình)
-      if (success
-          && policy.getExpectedResponseBody() != null
-          && !policy.getExpectedResponseBody().isBlank()) {
+      if (success && policy.hasExpectedResponseBody()) {
         if (response.body() == null
             || !response.body().contains(policy.getExpectedResponseBody())) {
           success = false;
@@ -83,7 +79,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
       }
 
       // 3. Kiểm tra Regex (nếu có cấu hình)
-      if (success && policy.getResponseRegex() != null && !policy.getResponseRegex().isBlank()) {
+      if (success && policy.hasResponseRegex()) {
         if (response.body() == null || !response.body().matches(policy.getResponseRegex())) {
           success = false;
           errorMessage = "Response body does not match regex.";
@@ -94,7 +90,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
 
       // Kiểm tra DEGRADED (phản hồi chậm nhưng vẫn thành công)
       if (success
-          && policy.getLatencyThresholdMillis() != null
+          && policy.hasLatencyThreshold()
           && responseTime > policy.getLatencyThresholdMillis()) {
         status = CheckStatus.DEGRADED;
         errorMessage = "High latency: " + responseTime + "ms";
