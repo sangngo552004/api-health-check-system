@@ -21,11 +21,18 @@ const policySchema = z.object({
 });
 
 type PolicyFormValues = z.input<typeof policySchema>;
-type PolicyFormData = z.output<typeof policySchema>;
+export type PolicyFormData = Omit<
+  CheckPolicyCreateCommand,
+  "expectedStatusCode" | "expectedResponseBody" | "responseRegex"
+> & {
+  expectedStatusCode?: number | null;
+  expectedResponseBody?: string | null;
+  responseRegex?: string | null;
+};
 
 interface PolicyFormProps {
   initialData?: CheckPolicyUpdateCommand | null;
-  onSubmit: (data: CheckPolicyCreateCommand) => Promise<void>;
+  onSubmit: (data: PolicyFormData) => Promise<void>;
   onCancel: () => void;
   loading: boolean;
 }
@@ -61,6 +68,10 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
       reset(initialData);
     }
   }, [initialData, reset]);
+
+  const submitHandler = async (data: PolicyFormData) => {
+    await onSubmit(data);
+  };
 
   return (
     <div
@@ -112,7 +123,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
         </h2>
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(submitHandler)}
           style={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
           <div

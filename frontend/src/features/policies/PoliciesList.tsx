@@ -6,7 +6,7 @@ import {
   CheckPolicyDto,
   CheckPolicyUpdateCommand,
 } from "../../types/policy.types";
-import { PolicyForm } from "./PolicyForm";
+import { PolicyForm, PolicyFormData } from "./PolicyForm";
 import { getErrorMessage } from "../../utils/error";
 
 export const PoliciesList: React.FC = () => {
@@ -54,13 +54,23 @@ export const PoliciesList: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: CheckPolicyCreateCommand) => {
+  const handleFormSubmit = async (data: PolicyFormData) => {
     setSubmitting(true);
     try {
+      const payload: CheckPolicyCreateCommand = {
+        ...data,
+        expectedStatusCode: data.expectedStatusCode ?? undefined,
+        expectedResponseBody: data.expectedResponseBody ?? undefined,
+        responseRegex: data.responseRegex ?? undefined,
+      };
+
       if (editingPolicy) {
-        await updatePolicy(editingPolicy.id, { ...data, id: editingPolicy.id });
+        await updatePolicy(editingPolicy.id, {
+          ...payload,
+          id: editingPolicy.id,
+        });
       } else {
-        await createPolicy(data);
+        await createPolicy(payload);
       }
       setIsFormOpen(false);
     } catch (error) {

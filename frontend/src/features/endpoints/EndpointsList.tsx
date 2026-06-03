@@ -17,7 +17,7 @@ import {
   EndpointCreateCommand,
   EndpointUpdateCommand,
 } from "../../types/endpoint.types";
-import { EndpointForm } from "./EndpointForm";
+import { EndpointForm, EndpointFormData } from "./EndpointForm";
 import { getErrorMessage } from "../../utils/error";
 
 export const EndpointsList: React.FC = () => {
@@ -95,20 +95,23 @@ export const EndpointsList: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (
-    data: Omit<EndpointCreateCommand, "alertRuleIds" | "headers">,
-  ) => {
+  const handleFormSubmit = async (data: EndpointFormData) => {
     setSubmitting(true);
     try {
+      const payload: Omit<EndpointCreateCommand, "alertRuleIds" | "headers"> = {
+        ...data,
+        policyId: data.policyId ?? undefined,
+      };
+
       if (editingEndpoint) {
         await updateEndpoint(editingEndpoint.id, {
-          ...data,
+          ...payload,
           id: editingEndpoint.id,
           alertRuleIds: [],
           headers: {},
         });
       } else {
-        await createEndpoint({ ...data, alertRuleIds: [], headers: {} });
+        await createEndpoint({ ...payload, alertRuleIds: [], headers: {} });
       }
       setIsFormOpen(false);
     } catch (error) {

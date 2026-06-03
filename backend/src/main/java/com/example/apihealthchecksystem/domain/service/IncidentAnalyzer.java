@@ -85,6 +85,7 @@ public class IncidentAnalyzer {
 
     return Incident.builder()
         .endpointId(endpointId)
+        .workspaceId(workspaceId)
         .startedAt(LocalDateTime.now())
         .status(IncidentStatus.OPEN)
         .reason(reason)

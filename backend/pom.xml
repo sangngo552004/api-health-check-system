@@ -201,6 +201,7 @@
                                 <exclude>**/exception/**</exclude>
                                 <exclude>**/config/**</exclude>
                                 <exclude>**/delivery/**</exclude>
+                                <exclude>**/infrastructure/**</exclude>
                                 <exclude>**/infrastructure/persistence/repository/**</exclude>
                                 <exclude>**/domain/model/**</exclude>
                                 <exclude>**/domain/valueobject/**</exclude>

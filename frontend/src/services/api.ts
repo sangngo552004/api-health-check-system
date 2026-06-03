@@ -94,7 +94,10 @@ async function request<T>(
     throw new Error(errorMsg);
   }
 
-  return data?.data !== undefined ? data.data : data;
+  const responseData =
+    data?.data !== undefined ? data.data : ((data as T | null) ?? null);
+
+  return responseData as T;
 }
 
 export const api = {

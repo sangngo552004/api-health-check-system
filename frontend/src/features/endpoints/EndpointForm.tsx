@@ -33,7 +33,12 @@ const endpointSchema = z.object({
 });
 
 type EndpointFormValues = z.input<typeof endpointSchema>;
-type EndpointFormData = Omit<EndpointCreateCommand, "alertRuleIds" | "headers">;
+export type EndpointFormData = Omit<
+  EndpointCreateCommand,
+  "alertRuleIds" | "headers" | "policyId"
+> & {
+  policyId?: number | null;
+};
 
 interface EndpointFormProps {
   initialData?: EndpointUpdateCommand | null;
