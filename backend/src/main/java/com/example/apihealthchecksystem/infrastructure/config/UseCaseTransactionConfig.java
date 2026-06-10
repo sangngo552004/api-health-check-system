@@ -4,8 +4,10 @@ import org.aopalliance.aop.Advice;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -15,9 +17,11 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 @Configuration
 @EnableTransactionManagement
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class UseCaseTransactionConfig {
 
   @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public Advisor useCaseTransactionAdvisor(PlatformTransactionManager transactionManager) {
     AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
     pointcut.setExpression(
