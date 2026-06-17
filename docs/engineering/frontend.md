@@ -26,7 +26,6 @@
 ### Public
 
 - `/login`
-- `/register`
 
 ### Private
 
@@ -64,9 +63,9 @@ Các module trên đều đã có API service và Zustand store riêng.
 
 ## Những phần còn dang dở
 
-- `Register` hiện là màn hình UI, chưa có backend endpoint để hoàn thành flow.
-- `Incidents` vẫn là placeholder.
-- Một số text placeholder trong UI chưa được cập nhật theo việc một số module đã có CRUD thật.
+- Demo flow hiện dùng account seed/demo; chưa có register API backend để self-service onboarding.
+- `Incidents` đã có màn hình thật cho list/filter/detail cơ bản, nhưng chưa có timeline/audit workflow sâu hơn.
+- Một số text placeholder trong UI cũ vẫn có thể cần dọn thêm.
 - Chưa có chiến lược refresh token chủ động trước khi access token hết hạn; hiện dựa vào refresh khi app khởi tạo hoặc khi user đăng nhập lại.
 
 ## Quy ước tích hợp API

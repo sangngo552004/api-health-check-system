@@ -21,7 +21,7 @@ Nếu cần phần giải thích sâu về cách các quy tắc này được hi
 Chứa mô hình nghiệp vụ thuần:
 
 - entity như `MonitoredEndpoint`, `CheckPolicy`, `Incident`, `Workspace`
-- value object như `CheckType`, `EndpointStatus`, `WorkspaceRole`
+- value object như `CheckType`, `EndpointStatus`, `UserRole`
 - domain event như `EndpointCheckedEvent`, `IncidentOpenedEvent`, `IncidentResolvedEvent`
 - domain service như `IncidentAnalyzer`
 
@@ -72,7 +72,7 @@ Chứa REST API và error handling:
 - Dữ liệu nghiệp vụ chính có `workspace_id`.
 - Frontend gửi workspace hiện tại qua header `X-Workspace-Id`.
 - Backend dùng `@PreAuthorize` kết hợp `WorkspaceSecurityEvaluator` để kiểm tra quyền `member` hoặc `admin` trong workspace.
-- Tạo và xóa workspace hiện vẫn yêu cầu `ADMIN` cấp hệ thống.
+- Tạo, sửa, xóa workspace và quản lý membership yêu cầu `SUPER_ADMIN`.
 
 ## Auth flow
 

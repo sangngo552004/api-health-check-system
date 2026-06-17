@@ -5,7 +5,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.apihealthchecksystem.application.dto.request.LoginRequest;
-import com.example.apihealthchecksystem.application.dto.request.TokenRefreshRequest;
 import com.example.apihealthchecksystem.application.dto.response.LoginResponse;
 import com.example.apihealthchecksystem.application.port.out.AuthenticationPort;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class AuthServiceTest {
   @Test
   void login_shouldDelegateToAuthenticationPort() {
     LoginRequest request = new LoginRequest("alice", "secret");
-    LoginResponse expected = new LoginResponse("access", "refresh", "ADMIN", false);
+    LoginResponse expected = new LoginResponse("access", "refresh", "SUPER_ADMIN", false);
     when(authenticationPort.authenticate("alice", "secret")).thenReturn(expected);
 
     LoginResponse actual = authService.login(request);
@@ -35,11 +34,10 @@ class AuthServiceTest {
 
   @Test
   void refreshToken_shouldDelegateToAuthenticationPort() {
-    TokenRefreshRequest request = new TokenRefreshRequest("refresh-token");
-    LoginResponse expected = new LoginResponse("new-access", "new-refresh", "ADMIN", false);
+    LoginResponse expected = new LoginResponse("new-access", "new-refresh", "SUPER_ADMIN", false);
     when(authenticationPort.refresh("refresh-token")).thenReturn(expected);
 
-    LoginResponse actual = authService.refreshToken(request);
+    LoginResponse actual = authService.refreshToken("refresh-token");
 
     assertSame(expected, actual);
     verify(authenticationPort).refresh("refresh-token");

@@ -9,6 +9,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -33,6 +34,15 @@ public class GlobalExceptionHandler {
     AppErrorCode errorCode = ex.getErrorCode();
     return ResponseEntity.status(resolveHttpStatus(errorCode))
         .body(ApiResponse.error(errorCode.getCode(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(BadCredentialsException.class)
+  public ResponseEntity<ApiResponse<Object>> handleBadCredentialsException(
+      BadCredentialsException ex) {
+    log.warn("Authentication failed: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(
+            ApiResponse.error(AppErrorCode.UNAUTHORIZED.getCode(), "Sai tai khoan hoac mat khau"));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { workspacesApi } from "../services/api/workspaces.api";
-import { WorkspaceMemberDto, WorkspaceRole } from "../types/workspace.types";
+import { WorkspaceMemberDto } from "../types/workspace.types";
 import { getErrorMessage } from "../utils/error";
 
 interface MemberState {
@@ -9,11 +9,7 @@ interface MemberState {
   error: string | null;
 
   fetchMembers: (workspaceId: number) => Promise<void>;
-  addMember: (
-    workspaceId: number,
-    userId: number,
-    role: WorkspaceRole,
-  ) => Promise<void>;
+  addMember: (workspaceId: number, userId: number) => Promise<void>;
   removeMember: (workspaceId: number, userId: number) => Promise<void>;
 }
 
@@ -35,14 +31,10 @@ export const useMemberStore = create<MemberState>((set, get) => ({
     }
   },
 
-  addMember: async (
-    workspaceId: number,
-    userId: number,
-    role: WorkspaceRole,
-  ) => {
+  addMember: async (workspaceId: number, userId: number) => {
     set({ loading: true, error: null });
     try {
-      await workspacesApi.addMember(workspaceId, userId, role);
+      await workspacesApi.addMember(workspaceId, userId);
       await get().fetchMembers(workspaceId);
     } catch (error) {
       set({

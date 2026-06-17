@@ -1,0 +1,8 @@
+com\example\demo\service\DemoScenarioService.class
+com\example\demo\domain\DemoMode.class
+com\example\demo\service\DemoScenarioService$DemoResult.class
+com\example\demo\service\DemoScenarioService$DemoState.class
+com\example\demo\web\DemoScenarioController$UpdateModeRequest.class
+com\example\demo\service\DemoScenarioService$1.class
+com\example\demo\web\DemoScenarioController.class
+com\example\demo\DemoServiceApplication.class

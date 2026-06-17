@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,16 +24,19 @@ public class EndpointRepositoryAdapter implements EndpointRepository {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Optional<MonitoredEndpoint> findById(Long id) {
     return jpaRepository.findById(id).map(mapper::toDomain);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<MonitoredEndpoint> findAll() {
     return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<MonitoredEndpoint> findAllActive() {
     return jpaRepository.findByIsActiveTrue().stream()
         .map(mapper::toDomain)
@@ -40,6 +44,7 @@ public class EndpointRepositoryAdapter implements EndpointRepository {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId, int page, int size) {
     org.springframework.data.domain.Pageable pageable =
         org.springframework.data.domain.PageRequest.of(page, size);
@@ -49,6 +54,7 @@ public class EndpointRepositoryAdapter implements EndpointRepository {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<MonitoredEndpoint> findByWorkspaceId(Long workspaceId) {
     return jpaRepository.findByWorkspaceId(workspaceId).stream()
         .map(mapper::toDomain)

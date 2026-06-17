@@ -31,7 +31,8 @@ public class AlertRuleController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<AlertRuleDto> createAlertRule(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @Valid @RequestBody AlertRuleCreateCommand command) {
@@ -39,7 +40,8 @@ public class AlertRuleController {
   }
 
   @GetMapping
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<AlertRuleDto>> getAlertRules(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @RequestParam(defaultValue = "0") int page,
@@ -48,14 +50,16 @@ public class AlertRuleController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<AlertRuleDto> getAlertRule(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(useCase.getAlertRule(workspaceId, id));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<AlertRuleDto> updateAlertRule(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -75,7 +79,8 @@ public class AlertRuleController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public void deleteAlertRule(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     useCase.deleteAlertRule(workspaceId, id);

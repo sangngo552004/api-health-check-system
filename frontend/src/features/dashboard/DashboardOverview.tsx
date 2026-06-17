@@ -28,12 +28,14 @@ export const DashboardOverview: React.FC = () => {
 
   const [stats, setStats] = useState<WorkspaceDashboardStatsDto | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<LatencyChartPoint[]>([]);
   const [chartLines, setChartLines] = useState<LatencyChartLine[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!activeWorkspace) return;
     setLoading(true);
+    setError(null);
     try {
       const statsData =
         await api.get<WorkspaceDashboardStatsDto>("/dashboard/stats");
@@ -41,8 +43,8 @@ export const DashboardOverview: React.FC = () => {
 
       const endpointsPage = await api.get<
         PagedResponseDto<DashboardEndpointSummary>
-      >("/endpoints?page=0&size=10");
-      const endpoints = endpointsPage?.content || [];
+      >("/endpoints", { params: { page: 0, size: 10 } });
+      const endpoints = endpointsPage?.items || [];
       const plotEndpoints = endpoints.slice(0, 3);
 
       const colors = ["#38bdf8", "#a855f7", "#10b981"];
@@ -87,6 +89,12 @@ export const DashboardOverview: React.FC = () => {
       );
       setChartData(mergedData);
     } catch (error) {
+      setError(
+        getErrorMessage(
+          error,
+          "Dashboard đang tải quá lâu hoặc backend chưa phản hồi.",
+        ),
+      );
       console.error(
         "Failed to fetch dashboard data",
         getErrorMessage(error, "Unknown dashboard error"),
@@ -155,6 +163,24 @@ export const DashboardOverview: React.FC = () => {
             : t("dashboard.refresh", "Cập nhật ngay")}
         </button>
       </div>
+
+      {error && (
+        <div
+          className="card"
+          style={{
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            background: "rgba(245, 158, 11, 0.08)",
+            color: "var(--text-primary)",
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: "8px" }}>
+            Khong tai duoc dashboard
+          </div>
+          <div style={{ color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            {error}
+          </div>
+        </div>
+      )}
 
       <div
         style={{

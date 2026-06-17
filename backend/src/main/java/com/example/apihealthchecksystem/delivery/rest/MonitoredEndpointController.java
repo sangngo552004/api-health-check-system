@@ -32,7 +32,8 @@ public class MonitoredEndpointController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> createEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @CurrentUserId Long currentUserId,
@@ -41,7 +42,8 @@ public class MonitoredEndpointController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> updateEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -65,14 +67,16 @@ public class MonitoredEndpointController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> getEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(endpointUseCase.getEndpoint(workspaceId, id));
   }
 
   @GetMapping
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<EndpointDto>> getEndpoints(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @RequestParam(defaultValue = "0") int page,
@@ -82,7 +86,8 @@ public class MonitoredEndpointController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public void deleteEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     endpointUseCase.deleteEndpoint(workspaceId, id);

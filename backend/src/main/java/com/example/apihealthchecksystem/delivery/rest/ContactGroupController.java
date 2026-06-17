@@ -31,7 +31,8 @@ public class ContactGroupController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> create(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @Valid @RequestBody ContactGroupCreateCommand command) {
@@ -39,7 +40,8 @@ public class ContactGroupController {
   }
 
   @GetMapping
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<ContactGroupDto>> getByWorkspace(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @RequestParam(defaultValue = "0") int page,
@@ -48,14 +50,16 @@ public class ContactGroupController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> getById(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(useCase.getContactGroup(workspaceId, id));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> update(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -74,7 +78,8 @@ public class ContactGroupController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public void delete(@RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     useCase.deleteContactGroup(workspaceId, id);
   }

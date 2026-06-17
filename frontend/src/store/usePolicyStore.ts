@@ -11,7 +11,7 @@ interface PolicyState {
   policies: CheckPolicyDto[];
   loading: boolean;
   error: string | null;
-  totalElements: number;
+  totalItems: number;
   totalPages: number;
   currentPage: number;
 
@@ -25,7 +25,7 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
   policies: [],
   loading: false,
   error: null,
-  totalElements: 0,
+  totalItems: 0,
   totalPages: 0,
   currentPage: 0,
 
@@ -34,8 +34,8 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
     try {
       const res = await policiesApi.getPolicies(page, size);
       set({
-        policies: res.content,
-        totalElements: res.totalElements,
+        policies: res.items,
+        totalItems: res.totalItems,
         totalPages: res.totalPages,
         currentPage: page,
         loading: false,

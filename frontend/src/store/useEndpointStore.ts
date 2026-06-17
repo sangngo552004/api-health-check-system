@@ -11,7 +11,7 @@ interface EndpointState {
   endpoints: EndpointDto[];
   loading: boolean;
   error: string | null;
-  totalElements: number;
+  totalItems: number;
   totalPages: number;
   currentPage: number;
 
@@ -25,7 +25,7 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
   endpoints: [],
   loading: false,
   error: null,
-  totalElements: 0,
+  totalItems: 0,
   totalPages: 0,
   currentPage: 0,
 
@@ -34,8 +34,8 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
     try {
       const res = await endpointsApi.getEndpoints(page, size);
       set({
-        endpoints: res.content,
-        totalElements: res.totalElements,
+        endpoints: res.items,
+        totalItems: res.totalItems,
         totalPages: res.totalPages,
         currentPage: page,
         loading: false,

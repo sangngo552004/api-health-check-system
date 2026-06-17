@@ -5,7 +5,6 @@ import com.example.apihealthchecksystem.application.dto.request.WorkspaceUpdateC
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceMemberDto;
 import com.example.apihealthchecksystem.application.exception.AppErrorCode;
-import com.example.apihealthchecksystem.application.exception.AppException;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
 import com.example.apihealthchecksystem.application.port.in.ManageWorkspaceUseCase;
 import com.example.apihealthchecksystem.application.port.out.UserRepository;
@@ -13,7 +12,6 @@ import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository
 import com.example.apihealthchecksystem.domain.model.User;
 import com.example.apihealthchecksystem.domain.model.Workspace;
 import com.example.apihealthchecksystem.domain.model.WorkspaceMember;
-import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +35,7 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
             .build();
 
     Workspace saved = workspaceRepository.save(workspace);
-    workspaceRepository.addMember(saved.getId(), userId, WorkspaceRole.ADMIN);
+    workspaceRepository.addMember(saved.getId(), userId);
 
     return toDto(saved);
   }
@@ -74,10 +72,9 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
   }
 
   @Override
-  public void addMember(Long workspaceId, Long userId, String role) {
+  public void addMember(Long workspaceId, Long userId) {
     getWorkspaceById(workspaceId);
-    WorkspaceRole workspaceRole = parseWorkspaceRole(role);
-    workspaceRepository.addMember(workspaceId, userId, workspaceRole);
+    workspaceRepository.addMember(workspaceId, userId);
   }
 
   @Override
@@ -104,7 +101,6 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
                   m.getUserId(),
                   user != null ? user.getUsername() : "Unknown",
                   user != null ? user.getEmail() : "Unknown",
-                  m.getRole(),
                   m.getJoinedAt());
             })
         .collect(Collectors.toList());
@@ -115,14 +111,6 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
         .findById(workspaceId)
         .orElseThrow(
             () -> new ResourceNotFoundException(AppErrorCode.WORKSPACE_NOT_FOUND, workspaceId));
-  }
-
-  private WorkspaceRole parseWorkspaceRole(String role) {
-    try {
-      return WorkspaceRole.valueOf(role.toUpperCase());
-    } catch (IllegalArgumentException ex) {
-      throw new AppException(AppErrorCode.INVALID_WORKSPACE_MEMBER_ROLE);
-    }
   }
 
   private WorkspaceDto toDto(Workspace workspace) {

@@ -103,4 +103,14 @@ public class AuthenticationAdapter implements AuthenticationPort {
     return new LoginResponse(
         newAccessToken, newRefreshToken, user.getRole().name(), user.getRequiresPasswordChange());
   }
+
+  @Override
+  @Transactional
+  public void logout(String refreshToken) {
+    if (refreshToken == null || refreshToken.isBlank()) {
+      return;
+    }
+
+    refreshTokenRepository.deleteByToken(refreshToken);
+  }
 }

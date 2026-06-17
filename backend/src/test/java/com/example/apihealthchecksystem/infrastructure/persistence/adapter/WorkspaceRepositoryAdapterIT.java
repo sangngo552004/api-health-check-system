@@ -3,7 +3,6 @@ package com.example.apihealthchecksystem.infrastructure.persistence.adapter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.example.apihealthchecksystem.domain.model.Workspace;
-import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import com.example.apihealthchecksystem.infrastructure.config.JpaAuditingConfig;
 import com.example.apihealthchecksystem.infrastructure.persistence.mapper.WorkspaceMapperImpl;
 import com.example.apihealthchecksystem.infrastructure.persistence.repository.WorkspaceJpaRepository;
@@ -52,11 +51,9 @@ class WorkspaceRepositoryAdapterIT {
     Workspace ws = adapter.save(Workspace.builder().name("WS").slug("ws").ownerId(1L).build());
     Long userId = 2L;
 
-    adapter.addMember(ws.getId(), userId, WorkspaceRole.ADMIN);
+    adapter.addMember(ws.getId(), userId);
 
-    Optional<WorkspaceRole> role = adapter.getMemberRole(ws.getId(), userId);
-    assertTrue(role.isPresent());
-    assertEquals(WorkspaceRole.ADMIN, role.get());
+    assertEquals(1, adapter.getMembers(ws.getId()).size());
   }
 
   @Test
@@ -65,8 +62,8 @@ class WorkspaceRepositoryAdapterIT {
     Workspace ws2 = adapter.save(Workspace.builder().name("WS2").slug("ws2").ownerId(1L).build());
     Long userId = 10L;
 
-    adapter.addMember(ws1.getId(), userId, WorkspaceRole.MEMBER);
-    adapter.addMember(ws2.getId(), userId, WorkspaceRole.ADMIN);
+    adapter.addMember(ws1.getId(), userId);
+    adapter.addMember(ws2.getId(), userId);
 
     List<Workspace> workspaces = adapter.findByUserId(userId);
 

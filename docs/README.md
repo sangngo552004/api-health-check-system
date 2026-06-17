@@ -5,6 +5,8 @@
 ## Cấu trúc thư mục
 
 - `getting-started/`: cách đọc docs, setup local, onboarding nhanh
+- `getting-started/demo-and-deploy.md`: checklist demo thi và deploy online tối thiểu
+- `getting-started/demo-runbook.md`: kịch bản demo 5-7 phút và đường lui local
 - `business/`: bối cảnh bài toán, yêu cầu nghiệp vụ, thuật ngữ, sequence flow
 - `architecture/`: clean architecture, design pattern, decision log, database design, guideline theo layer
 - `engineering/`: backend, frontend, code quality, testcase, AI agent guide
@@ -27,10 +29,11 @@
 2. [Project Overview](business/project-overview.md)
 3. [Business Requirements](business/business-requirements.md)
 4. [Local Development](getting-started/local-development.md)
-5. [Architecture](architecture/architecture.md)
-6. [Clean Architecture Implementation Guide](architecture/clean-architecture-implementation.md)
-7. [Sequence Flows](business/sequence-flows.md)
-8. [Progress Checklist](project/progress-checklist.md)
+5. [Demo and Deploy](getting-started/demo-and-deploy.md)
+6. [Architecture](architecture/architecture.md)
+7. [Clean Architecture Implementation Guide](architecture/clean-architecture-implementation.md)
+8. [Sequence Flows](business/sequence-flows.md)
+9. [Progress Checklist](project/progress-checklist.md)
 
 ### Nếu bạn cần tập trung vào kiến trúc và design pattern
 
@@ -77,24 +80,25 @@
 3. [Business Requirements](business/business-requirements.md)
 4. [Glossary](business/glossary.md)
 5. [Local Development](getting-started/local-development.md)
-6. [Architecture](architecture/architecture.md)
-7. [Architecture and Design Patterns](architecture/architecture-and-patterns.md)
-8. [Clean Architecture Implementation Guide](architecture/clean-architecture-implementation.md)
-9. [Architecture Decisions](architecture/architecture-decisions.md)
-10. [Layer Coding Guidelines](architecture/layer-coding-guidelines.md)
-11. [Database Design](architecture/database-design.md)
-12. [Backend](engineering/backend.md)
-13. [Frontend](engineering/frontend.md)
-14. [Sequence Flows](business/sequence-flows.md)
-15. [API](api/README.md)
-16. [Code Quality and Delivery Controls](engineering/code-quality.md)
-17. [Testing and Quality](engineering/testing-and-quality.md)
-18. [Test Case Catalog](engineering/test-case-catalog.md)
-19. [AI Agent Guide](engineering/ai-agent-guide.md)
-20. [Project Status](project/project-status.md)
-21. [Progress Checklist](project/progress-checklist.md)
-22. [Roadmap](project/roadmap.md)
-23. [UI Screenshot Guide](business/ui-screenshot-guide.md)
+6. [Demo and Deploy](getting-started/demo-and-deploy.md)
+7. [Architecture](architecture/architecture.md)
+8. [Architecture and Design Patterns](architecture/architecture-and-patterns.md)
+9. [Clean Architecture Implementation Guide](architecture/clean-architecture-implementation.md)
+10. [Architecture Decisions](architecture/architecture-decisions.md)
+11. [Layer Coding Guidelines](architecture/layer-coding-guidelines.md)
+12. [Database Design](architecture/database-design.md)
+13. [Backend](engineering/backend.md)
+14. [Frontend](engineering/frontend.md)
+15. [Sequence Flows](business/sequence-flows.md)
+16. [API](api/README.md)
+17. [Code Quality and Delivery Controls](engineering/code-quality.md)
+18. [Testing and Quality](engineering/testing-and-quality.md)
+19. [Test Case Catalog](engineering/test-case-catalog.md)
+20. [AI Agent Guide](engineering/ai-agent-guide.md)
+21. [Project Status](project/project-status.md)
+22. [Progress Checklist](project/progress-checklist.md)
+23. [Roadmap](project/roadmap.md)
+24. [UI Screenshot Guide](business/ui-screenshot-guide.md)
 
 ## Nguyên tắc tài liệu
 

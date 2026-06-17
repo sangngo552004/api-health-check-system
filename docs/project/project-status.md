@@ -32,21 +32,20 @@ Hệ thống đang ở mức `MVP đang phát triển`.
 | Notification delivery | `partial` | Mới log, chưa gửi email/webhook thật |
 | Alert routing | `partial` | Luồng hiện tại lấy contact group theo workspace |
 | Scheduler policy usage | `partial` | Có `intervalSeconds` trong policy nhưng chưa lập lịch riêng |
-| Frontend register flow | `partial` | Có UI nhưng chưa có backend API |
-| Incident UI/API | `partial` | Dashboard có incident summary, chưa có module incidents hoàn chỉnh |
+| Frontend onboarding flow | `partial` | Dùng account seed/demo, chưa có backend register API |
+| Incident UI/API | `implemented` | Có API list/detail/filter cơ bản và màn incidents riêng |
 
 ## Những gì chưa có
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
 | User self-registration | `missing` | Chưa có endpoint backend |
-| Incident history management | `missing` | Chưa có list/filter/detail riêng |
-| Real notification adapters | `missing` | Chưa có email, Slack, webhook adapter production-ready |
+| Real notification adapters | `partial` | Đã có webhook adapter; email/Slack production-ready vẫn chưa có |
 | Scheduler HA | `missing` | Chưa có distributed coordination |
 | Maintenance window | `missing` | Chưa có domain support |
 
 ## Rủi ro tài liệu cần ghi nhớ
 
 - Một số migration seed và placeholder UI phục vụ demo hơn là production.
-- Một vài text trong frontend chưa phản ánh đúng việc module đã được nối API thật.
+- Demo flow hiện ưu tiên account seed/demo thay vì register tự phục vụ.
 - Worktree hiện đang tiếp tục được phát triển, nên tài liệu này nên được cập nhật cùng với các thay đổi API lớn.

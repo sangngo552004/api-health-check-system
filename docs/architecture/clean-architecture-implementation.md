@@ -29,7 +29,7 @@ Nói cách khác, kiến trúc ở đây không chỉ là “chia folder”, mà
 Nó gồm:
 
 - entity như `MonitoredEndpoint`, `CheckPolicy`, `Incident`, `Workspace`
-- value object như `CheckType`, `EndpointStatus`, `WorkspaceRole`
+- value object như `CheckType`, `EndpointStatus`, `UserRole`
 - domain event như `IncidentOpenedEvent`
 - domain service như `IncidentAnalyzer`
 

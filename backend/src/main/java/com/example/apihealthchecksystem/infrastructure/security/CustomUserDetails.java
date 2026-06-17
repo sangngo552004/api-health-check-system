@@ -14,6 +14,7 @@ public class CustomUserDetails implements UserDetails {
   private final Long id;
   private final String username;
   private final String password;
+  private final String role;
   private final boolean requiresPasswordChange;
   private final Collection<? extends GrantedAuthority> authorities;
 
@@ -21,6 +22,7 @@ public class CustomUserDetails implements UserDetails {
     this.id = user.getId();
     this.username = user.getUsername();
     this.password = user.getPasswordHash();
+    this.role = user.getRole().name();
     this.requiresPasswordChange = user.getRequiresPasswordChange();
     // Prefix "ROLE_" is standard for Spring Security role checks
     this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));

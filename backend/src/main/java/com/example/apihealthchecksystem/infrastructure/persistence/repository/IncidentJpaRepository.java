@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface IncidentJpaRepository extends JpaRepository<IncidentJpaEntity, Long> {
   List<IncidentJpaEntity> findByEndpointId(Long endpointId);
 
+  List<IncidentJpaEntity> findByWorkspaceId(Long workspaceId);
+
   Optional<IncidentJpaEntity> findFirstByEndpointIdAndStatusOrderByIdDesc(
       Long endpointId, IncidentStatus status);
 

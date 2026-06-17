@@ -6,13 +6,12 @@ import { X, UserPlus, AlertCircle } from "lucide-react";
 
 const memberSchema = z.object({
   userId: z.number().min(1, "User ID không hợp lệ"),
-  role: z.enum(["ADMIN", "MEMBER"]),
 });
 
 type MemberFormData = z.output<typeof memberSchema>;
 
 interface MemberFormProps {
-  onSubmit: (userId: number, role: MemberFormData["role"]) => Promise<void>;
+  onSubmit: (userId: number) => Promise<void>;
   onCancel: () => void;
   loading: boolean;
 }
@@ -30,12 +29,11 @@ export const MemberForm: React.FC<MemberFormProps> = ({
     resolver: zodResolver(memberSchema),
     defaultValues: {
       userId: undefined as unknown as number,
-      role: "MEMBER" as "ADMIN" | "MEMBER",
     },
   });
 
   const submitHandler = async (data: MemberFormData) => {
-    await onSubmit(data.userId, data.role);
+    await onSubmit(data.userId);
   };
 
   return (
@@ -138,35 +136,6 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                 {errors.userId.message as string}
               </div>
             )}
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
-              }}
-            >
-              Quyền hạn (Role)
-            </label>
-            <select
-              {...register("role")}
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
-            >
-              <option value="MEMBER">Thành viên (MEMBER)</option>
-              <option value="ADMIN">Quản trị viên (ADMIN)</option>
-            </select>
           </div>
 
           <div

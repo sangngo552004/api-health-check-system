@@ -5,6 +5,9 @@ import com.example.apihealthchecksystem.application.mapper.CheckPolicyDtoMapper;
 import com.example.apihealthchecksystem.application.mapper.ContactGroupDtoMapper;
 import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.AuthUseCase;
+import com.example.apihealthchecksystem.application.port.in.GetAdminDataUseCase;
+import com.example.apihealthchecksystem.application.port.in.GetIncidentUseCase;
+import com.example.apihealthchecksystem.application.port.in.ManageAdminUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageAlertRuleUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageCheckPolicyUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageContactGroupUseCase;
@@ -22,6 +25,9 @@ import com.example.apihealthchecksystem.application.port.out.IncidentRepository;
 import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.application.usecase.AuthService;
+import com.example.apihealthchecksystem.application.usecase.GetAdminDataService;
+import com.example.apihealthchecksystem.application.usecase.GetIncidentService;
+import com.example.apihealthchecksystem.application.usecase.ManageAdminService;
 import com.example.apihealthchecksystem.application.usecase.ManageAlertRuleService;
 import com.example.apihealthchecksystem.application.usecase.ManageCheckPolicyService;
 import com.example.apihealthchecksystem.application.usecase.ManageContactGroupService;
@@ -32,6 +38,7 @@ import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class UseCaseConfig {
@@ -39,6 +46,20 @@ public class UseCaseConfig {
   @Bean
   public AuthUseCase authUseCase(AuthenticationPort authenticationPort) {
     return new AuthService(authenticationPort);
+  }
+
+  @Bean
+  public GetAdminDataUseCase getAdminDataUseCase(
+      UserRepository userRepository, WorkspaceRepository workspaceRepository) {
+    return new GetAdminDataService(userRepository, workspaceRepository);
+  }
+
+  @Bean
+  public ManageAdminUseCase manageAdminUseCase(
+      UserRepository userRepository,
+      WorkspaceRepository workspaceRepository,
+      PasswordEncoder passwordEncoder) {
+    return new ManageAdminService(userRepository, workspaceRepository, passwordEncoder);
   }
 
   @Bean
@@ -99,5 +120,13 @@ public class UseCaseConfig {
           HealthCheckResultRepository resultRepository) {
     return new com.example.apihealthchecksystem.application.usecase.GetDashboardStatsService(
         workspaceRepository, endpointRepository, incidentRepository, resultRepository);
+  }
+
+  @Bean
+  public GetIncidentUseCase getIncidentUseCase(
+      WorkspaceRepository workspaceRepository,
+      IncidentRepository incidentRepository,
+      EndpointRepository endpointRepository) {
+    return new GetIncidentService(workspaceRepository, incidentRepository, endpointRepository);
   }
 }

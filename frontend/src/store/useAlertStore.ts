@@ -11,7 +11,7 @@ interface AlertState {
   alertRules: AlertRuleDto[];
   loading: boolean;
   error: string | null;
-  totalElements: number;
+  totalItems: number;
   totalPages: number;
   currentPage: number;
 
@@ -25,7 +25,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
   alertRules: [],
   loading: false,
   error: null,
-  totalElements: 0,
+  totalItems: 0,
   totalPages: 0,
   currentPage: 0,
 
@@ -34,8 +34,8 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     try {
       const res = await alertsApi.getAlertRules(page, size);
       set({
-        alertRules: res.content,
-        totalElements: res.totalElements,
+        alertRules: res.items,
+        totalItems: res.totalItems,
         totalPages: res.totalPages,
         currentPage: page,
         loading: false,

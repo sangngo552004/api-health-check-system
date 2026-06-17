@@ -1,8 +1,7 @@
 export interface PagedResponseDto<T> {
-  content: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
+  items: T[];
+  page: number;
+  size: number;
+  totalItems: number;
   totalPages: number;
-  last: boolean;
 }

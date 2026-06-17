@@ -40,7 +40,7 @@ Nếu hôm nay phải quay lại code từ con số 0 về ngữ cảnh, hãy nh
 - scheduler health check nền đã chạy được
 - incident open/resolve cơ bản đã hoạt động
 - `TCP health check` đã xuất hiện trong code và có test
-- điểm còn dở nhất là `incident module hoàn chỉnh`, `notification delivery thật`, `register flow`, `policy interval runtime`
+- điểm còn dở nhất là `notification delivery production-grade`, `register API`, `policy interval runtime`
 
 ## 3. Checklist theo khối chức năng
 
@@ -59,9 +59,9 @@ Nếu hôm nay phải quay lại code từ con số 0 về ngữ cảnh, hãy nh
 - [x] Login API
 - [x] Refresh token API
 - [x] JWT filter và security config
-- [x] Role global `ADMIN`
+- [x] Role global `SUPER_ADMIN`
 - [x] Kiểm tra quyền theo workspace qua `@PreAuthorize`
-- [-] Frontend register screen có UI
+- [-] Demo onboarding hiện dùng account seed/demo
 - [ ] Backend register API
 - [~] Hoàn thiện session hardening và refresh strategy chủ động hơn ở frontend
 
@@ -129,8 +129,8 @@ Nếu hôm nay phải quay lại code từ con số 0 về ngữ cảnh, hãy nh
 - [x] Đóng incident khi phục hồi
 - [x] Có event `IncidentOpenedEvent` và `IncidentResolvedEvent`
 - [x] Dashboard trả incident summary
-- [ ] API riêng cho incident list/detail/filter
-- [ ] Frontend incidents screen thật
+- [x] API riêng cho incident list/detail/filter
+- [x] Frontend incidents screen thật
 - [~] Thêm incident timeline hoặc audit trail
 
 ## 3.10. Notification
@@ -138,8 +138,8 @@ Nếu hôm nay phải quay lại code từ con số 0 về ngữ cảnh, hãy nh
 - [x] Có `NotificationPort`
 - [x] Có `LogNotificationAdapter`
 - [x] Có `IncidentEventListener`
+- [x] Webhook notification adapter thật
 - [ ] Email notification adapter thật
-- [ ] Webhook notification adapter thật
 - [ ] Retry / delivery status / failure handling
 - [~] Outbox pattern cho notification nếu còn tiến độ
 
@@ -171,11 +171,11 @@ Nếu hôm nay phải quay lại code từ con số 0 về ngữ cảnh, hãy nh
 
 Nếu mục tiêu là hoàn thiện MVP hợp lý nhất, nên đi theo thứ tự:
 
-1. [ ] Hoàn thiện `incident module` ở backend và frontend
-2. [ ] Hoàn thiện `notification delivery` thật
-3. [ ] Hoàn thiện `register/onboarding` hoặc quyết định bỏ route register khỏi UI
-4. [ ] Làm cho `CheckPolicy.intervalSeconds` được áp dụng thực sự
-5. [ ] Dọn các placeholder/text cũ trong frontend
+1. [ ] Hoàn thiện `notification delivery` production-grade hơn nữa
+2. [ ] Hoàn thiện `register/onboarding` hoặc quyết định làm register API thật
+3. [ ] Làm cho `CheckPolicy.intervalSeconds` được áp dụng thực sự
+4. [ ] Dọn các placeholder/text cũ còn sót trong frontend
+5. [x] Củng cố deploy/demo script cho buổi thi
 
 ## 5. Nice-to-have nếu còn thời gian
 

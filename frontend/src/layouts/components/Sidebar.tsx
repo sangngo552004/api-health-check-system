@@ -29,30 +29,29 @@ export const Sidebar: React.FC = () => {
   const menuItems = [
     {
       name: t("menu.dashboard", "Tổng quan"),
-      path: "/",
+      path: "/app",
       icon: <Activity size={20} />,
     },
     {
       name: t("menu.endpoints", "Giám sát APIs"),
-      path: "/endpoints",
+      path: "/app/endpoints",
       icon: <Globe size={20} />,
     },
     {
       name: "Check Policies",
-      path: "/policies",
+      path: "/app/policies",
       icon: <ShieldAlert size={20} />,
     },
-    { name: "Alert Rules", path: "/alerts", icon: <BellRing size={20} /> },
-    { name: "Contact Groups", path: "/contacts", icon: <Users size={20} /> },
+    { name: "Alert Rules", path: "/app/alerts", icon: <BellRing size={20} /> },
     {
-      name: t("menu.incidents", "Sự cố & Cảnh báo"),
-      path: "/incidents",
-      icon: <AlertTriangle size={20} />,
+      name: "Contact Groups",
+      path: "/app/contacts",
+      icon: <Users size={20} />,
     },
     {
-      name: t("menu.members", "Nhóm & Thành viên"),
-      path: "/members",
-      icon: <Users size={20} />,
+      name: t("menu.incidents", "Sự cố & Cảnh báo"),
+      path: "/app/incidents",
+      icon: <AlertTriangle size={20} />,
     },
   ];
 
@@ -171,7 +170,7 @@ export const Sidebar: React.FC = () => {
             >
               {activeWorkspace
                 ? activeWorkspace.name
-                : t("common.loading", "Đang tải...")}
+                : t("workspace.select", "Chọn workspace")}
             </span>
           </div>
           <ChevronDown
@@ -352,7 +351,7 @@ export const Sidebar: React.FC = () => {
               {user ? user.username : "Guest"}
             </span>
             <span style={{ fontSize: "0.725rem", color: "var(--text-muted)" }}>
-              {user ? user.role : "Member"}
+              {user ? user.role : "USER"}
             </span>
           </div>
         </div>

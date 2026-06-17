@@ -17,9 +17,6 @@ public class WorkspaceMemberJpaEntity {
 
   @EmbeddedId private WorkspaceMemberId id;
 
-  @Column(nullable = false)
-  private String role; // ADMIN, MEMBER
-
   @CreatedDate
   @Column(name = "joined_at", nullable = false, updatable = false)
   private LocalDateTime joinedAt = LocalDateTime.now();

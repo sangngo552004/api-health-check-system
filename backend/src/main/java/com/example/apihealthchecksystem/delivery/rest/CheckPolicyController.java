@@ -31,7 +31,8 @@ public class CheckPolicyController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> create(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @Valid @RequestBody CheckPolicyCreateCommand command) {
@@ -39,7 +40,8 @@ public class CheckPolicyController {
   }
 
   @GetMapping
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<CheckPolicyDto>> getByWorkspace(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @RequestParam(defaultValue = "0") int page,
@@ -48,14 +50,16 @@ public class CheckPolicyController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> getById(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(useCase.getPolicy(workspaceId, id));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> update(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -77,7 +81,8 @@ public class CheckPolicyController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public void delete(@RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     useCase.deletePolicy(workspaceId, id);
   }

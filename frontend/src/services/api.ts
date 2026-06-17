@@ -2,6 +2,7 @@ import i18n from "../i18n";
 
 const BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+const REQUEST_TIMEOUT_MS = 10000;
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
@@ -40,7 +41,7 @@ async function request<T>(
     headers.set("Authorization", `Bearer ${inMemoryAccessToken}`);
   }
 
-  if (workspaceId) {
+  if (workspaceId && !path.startsWith("/admin/")) {
     headers.set("X-Workspace-Id", workspaceId);
   }
 
@@ -56,19 +57,38 @@ async function request<T>(
   const config: RequestInit = {
     ...options,
     headers,
+    credentials: "include",
   };
 
-  const response = await fetch(url, config);
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  );
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...config,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Yeu cau toi backend bi timeout sau 10 giay.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (response.status === 401 || response.status === 403) {
     // Auth errors: if not logging in, dispatch event to logout cleanly
     if (
       path !== "/auth/login" &&
-      path !== "/auth/register" &&
-      path !== "/auth/refresh"
+      path !== "/auth/refresh" &&
+      path !== "/auth/logout"
     ) {
       setInMemoryToken(null);
-      localStorage.removeItem("refresh_token");
       window.dispatchEvent(new Event("auth-logout"));
     }
   }

@@ -17,7 +17,7 @@ public interface ManageWorkspaceUseCase {
 
   void deleteWorkspace(Long id);
 
-  void addMember(Long workspaceId, Long userId, String role);
+  void addMember(Long workspaceId, Long userId);
 
   void removeMember(Long workspaceId, Long userId);
 

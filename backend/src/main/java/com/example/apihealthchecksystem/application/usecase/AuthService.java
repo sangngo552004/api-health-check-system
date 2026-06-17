@@ -1,7 +1,6 @@
 package com.example.apihealthchecksystem.application.usecase;
 
 import com.example.apihealthchecksystem.application.dto.request.LoginRequest;
-import com.example.apihealthchecksystem.application.dto.request.TokenRefreshRequest;
 import com.example.apihealthchecksystem.application.dto.response.LoginResponse;
 import com.example.apihealthchecksystem.application.port.in.AuthUseCase;
 import com.example.apihealthchecksystem.application.port.out.AuthenticationPort;
@@ -20,7 +19,12 @@ public class AuthService implements AuthUseCase {
   }
 
   @Override
-  public LoginResponse refreshToken(TokenRefreshRequest request) {
-    return authenticationPort.refresh(request.refreshToken());
+  public LoginResponse refreshToken(String refreshToken) {
+    return authenticationPort.refresh(refreshToken);
+  }
+
+  @Override
+  public void logout(String refreshToken) {
+    authenticationPort.logout(refreshToken);
   }
 }

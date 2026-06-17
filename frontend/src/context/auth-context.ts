@@ -3,14 +3,14 @@ import { createContext } from "react";
 export interface User {
   id: number;
   username: string;
-  role: string;
+  role: "SUPER_ADMIN" | "USER";
 }
 
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
+  refreshToken: string | null;
+  role: "SUPER_ADMIN" | "USER";
+  requiresPasswordChange: boolean;
 }
 
 export interface LoginCredentials {

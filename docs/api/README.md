@@ -69,5 +69,5 @@ Sau đó commit lại `docs/api/openapi.json`.
 
 ## Lưu ý hiện tại
 
-- Frontend có route `/register`, nhưng backend chưa có endpoint register trong OpenAPI hiện tại.
-- Dashboard hiện mới expose `stats` và `endpoint latency`; chưa có incident API riêng.
+- Frontend demo hiện không mở route `/register`; backend vẫn chưa có endpoint register trong OpenAPI hiện tại.
+- Ngoài dashboard stats/latency, backend đã có incident API riêng cho list/detail/filter cơ bản.

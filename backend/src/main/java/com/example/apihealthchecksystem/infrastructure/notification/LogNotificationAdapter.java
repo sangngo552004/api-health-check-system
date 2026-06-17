@@ -1,6 +1,5 @@
 package com.example.apihealthchecksystem.infrastructure.notification;
 
-import com.example.apihealthchecksystem.application.port.out.NotificationPort;
 import com.example.apihealthchecksystem.domain.model.ContactGroup;
 import com.example.apihealthchecksystem.domain.model.Incident;
 import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
@@ -10,9 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class LogNotificationAdapter implements NotificationPort {
+public class LogNotificationAdapter {
 
-  @Override
   public void sendIncidentAlert(
       Incident incident, MonitoredEndpoint endpoint, List<ContactGroup> contactGroups) {
     log.error("=====================================================");
@@ -45,7 +43,6 @@ public class LogNotificationAdapter implements NotificationPort {
     log.error("=====================================================");
   }
 
-  @Override
   public void sendRecoveryAlert(
       Incident incident, MonitoredEndpoint endpoint, List<ContactGroup> contactGroups) {
     log.info("=====================================================");

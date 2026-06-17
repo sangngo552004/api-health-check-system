@@ -32,14 +32,14 @@ public class WorkspaceController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ApiResponse<WorkspaceDto> createWorkspace(
       @Valid @RequestBody WorkspaceCreateCommand command, @CurrentUserId Long userId) {
     return ApiResponse.success(workspaceUseCase.createWorkspace(command, userId));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#id, authentication.principal.id)")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ApiResponse<WorkspaceDto> updateWorkspace(
       @PathVariable Long id, @Valid @RequestBody WorkspaceUpdateCommand command) {
     WorkspaceUpdateCommand withId =
@@ -48,7 +48,7 @@ public class WorkspaceController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("@workspaceSecurity.isMember(#id, authentication.principal.id)")
+  @PreAuthorize("@workspaceSecurity.canAccessWorkspaceArea(#id, authentication.principal.id)")
   public ApiResponse<WorkspaceDto> getWorkspace(@PathVariable Long id) {
     return ApiResponse.success(workspaceUseCase.getWorkspace(id));
   }
@@ -60,27 +60,26 @@ public class WorkspaceController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public void deleteWorkspace(@PathVariable Long id) {
     workspaceUseCase.deleteWorkspace(id);
   }
 
   @PostMapping("/{id}/members")
-  @PreAuthorize("@workspaceSecurity.isAdmin(#id, authentication.principal.id)")
-  public void addMember(
-      @PathVariable Long id, @RequestParam Long userId, @RequestParam String role) {
-    workspaceUseCase.addMember(id, userId, role);
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public void addMember(@PathVariable Long id, @RequestParam Long userId) {
+    workspaceUseCase.addMember(id, userId);
   }
 
   @DeleteMapping("/{id}/members/{userId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@workspaceSecurity.isAdmin(#id, authentication.principal.id)")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public void removeMember(@PathVariable Long id, @PathVariable Long userId) {
     workspaceUseCase.removeMember(id, userId);
   }
 
   @GetMapping("/{id}/members")
-  @PreAuthorize("@workspaceSecurity.isMember(#id, authentication.principal.id)")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ApiResponse<List<WorkspaceMemberDto>> getMembers(@PathVariable Long id) {
     return ApiResponse.success(workspaceUseCase.getMembers(id));
   }

@@ -9,6 +9,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.util.Date;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenProvider {
 
-  @Value("${app.jwt.secret:defaultSecretKeyWhichIsVeryLongAndSecureEnoughForLocalTesting123!@#}")
+  @Value(
+      "${app.jwt.secret:ZGV2LWFwaS1oZWFsdGgtY2hlY2stc3lzdGVtLWp3dC1zZWNyZXQta2V5LTEyMzQ1Njc4OTA=}")
   private String jwtSecret;
 
   @Value("${app.jwt.expiration-ms:3600000}") // 1 hour
@@ -38,7 +40,7 @@ public class JwtTokenProvider {
         .subject(Long.toString(userPrincipal.getId()))
         .claim("username", userPrincipal.getUsername())
         .claim("requiresPasswordChange", userPrincipal.isRequiresPasswordChange())
-        .claim("roles", userPrincipal.getAuthorities())
+        .claim("role", userPrincipal.getRole())
         .issuedAt(new Date())
         .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
         .signWith(getSigningKey())
@@ -47,6 +49,7 @@ public class JwtTokenProvider {
 
   public String generateRefreshToken(Long userId) {
     return Jwts.builder()
+        .id(UUID.randomUUID().toString())
         .subject(Long.toString(userId))
         .issuedAt(new Date())
         .expiration(new Date((new Date()).getTime() + refreshExpirationMs))

@@ -48,4 +48,11 @@ public class IncidentRepositoryAdapter implements IncidentRepository {
         .map(mapper::toDomain)
         .collect(Collectors.toList());
   }
+
+  @Override
+  public List<Incident> findByWorkspaceId(Long workspaceId) {
+    return jpaRepository.findByWorkspaceId(workspaceId).stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
 }

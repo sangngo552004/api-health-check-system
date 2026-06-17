@@ -6,4 +6,6 @@ public interface AuthenticationPort {
   LoginResponse authenticate(String username, String password);
 
   LoginResponse refresh(String refreshToken);
+
+  void logout(String refreshToken);
 }

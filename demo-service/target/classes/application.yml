@@ -1,0 +1,12 @@
+server:
+  port: ${SERVER_PORT:8086}
+
+spring:
+  application:
+    name: api-health-check-demo-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

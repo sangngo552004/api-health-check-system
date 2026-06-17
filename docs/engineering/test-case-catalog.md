@@ -142,13 +142,13 @@ Trạng thái:
 
 ## 3.2. Workspace
 
-### TC-WS-01. Tạo workspace thành công bởi ADMIN
+### TC-WS-01. Tạo workspace thành công bởi SUPER_ADMIN
 
 Mục tiêu:
 
-- xác nhận role global `ADMIN` mới được tạo workspace
+- xác nhận role global `SUPER_ADMIN` mới được tạo workspace
 
-### TC-WS-02. User thường không được tạo workspace nếu không phải ADMIN
+### TC-WS-02. User thường không được tạo workspace nếu không phải SUPER_ADMIN
 
 ### TC-WS-03. Lấy danh sách workspace của user
 

@@ -1,8 +1,8 @@
 package com.example.apihealthchecksystem.infrastructure.persistence.adapter;
 
+import com.example.apihealthchecksystem.application.dto.response.PageResult;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.domain.model.Workspace;
-import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import com.example.apihealthchecksystem.infrastructure.persistence.entity.WorkspaceMemberId;
 import com.example.apihealthchecksystem.infrastructure.persistence.entity.WorkspaceMemberJpaEntity;
 import com.example.apihealthchecksystem.infrastructure.persistence.mapper.WorkspaceMapper;
@@ -10,17 +10,42 @@ import com.example.apihealthchecksystem.infrastructure.persistence.repository.Wo
 import com.example.apihealthchecksystem.infrastructure.persistence.repository.WorkspaceMemberJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
+  private static final Set<String> ALLOWED_SORT_FIELDS =
+      Set.of("id", "name", "slug", "ownerId", "isActive", "createdAt", "updatedAt");
 
   private final WorkspaceJpaRepository jpaRepository;
   private final WorkspaceMemberJpaRepository memberJpaRepository;
   private final WorkspaceMapper mapper;
+
+  @Override
+  public List<Workspace> findAll() {
+    return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+  }
+
+  @Override
+  public PageResult<Workspace> search(
+      String search,
+      Boolean isActive,
+      Long ownerId,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir) {
+    var pageable = PageRequest.of(page, size, buildSort(sortBy, sortDir));
+    var result = jpaRepository.search(normalizeSearch(search), isActive, ownerId, pageable);
+    return new PageResult<>(
+        result.getContent().stream().map(mapper::toDomain).toList(), result.getTotalElements());
+  }
 
   @Override
   public Workspace save(Workspace workspace) {
@@ -48,28 +73,33 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
   }
 
   @Override
+  public boolean existsBySlug(String slug) {
+    return jpaRepository.existsBySlug(slug);
+  }
+
+  @Override
+  public boolean existsByOwnerId(Long ownerId) {
+    return jpaRepository.existsByOwnerId(ownerId);
+  }
+
+  @Override
   public void deleteById(Long id) {
     jpaRepository.deleteById(id);
   }
 
   @Override
-  public void addMember(Long workspaceId, Long userId, WorkspaceRole role) {
+  public void addMember(Long workspaceId, Long userId) {
+    if (memberJpaRepository.existsByIdWorkspaceIdAndIdUserId(workspaceId, userId)) {
+      return;
+    }
     WorkspaceMemberJpaEntity member = new WorkspaceMemberJpaEntity();
     member.setId(new WorkspaceMemberId(workspaceId, userId));
-    member.setRole(role.name());
     memberJpaRepository.save(member);
   }
 
   @Override
   public void removeMember(Long workspaceId, Long userId) {
     memberJpaRepository.deleteById(new WorkspaceMemberId(workspaceId, userId));
-  }
-
-  @Override
-  public Optional<WorkspaceRole> getMemberRole(Long workspaceId, Long userId) {
-    return memberJpaRepository
-        .findById(new WorkspaceMemberId(workspaceId, userId))
-        .map(member -> WorkspaceRole.valueOf(member.getRole()));
   }
 
   @Override
@@ -81,9 +111,22 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
                 com.example.apihealthchecksystem.domain.model.WorkspaceMember.builder()
                     .workspaceId(workspaceId)
                     .userId(member.getId().getUserId())
-                    .role(WorkspaceRole.valueOf(member.getRole()))
                     .joinedAt(member.getJoinedAt())
                     .build())
         .collect(Collectors.toList());
+  }
+
+  private Sort buildSort(String sortBy, String sortDir) {
+    String normalizedSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+    Sort.Direction direction =
+        "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    return Sort.by(direction, normalizedSortBy);
+  }
+
+  private String normalizeSearch(String search) {
+    if (search == null || search.isBlank()) {
+      return null;
+    }
+    return search.trim();
   }
 }

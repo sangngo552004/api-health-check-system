@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../../../context/useAuth";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Shield,
   Lock,
@@ -29,8 +29,10 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login({ username, password });
-      navigate("/");
+      const response = await login({ username, password });
+      navigate(
+        response.role === "SUPER_ADMIN" ? "/admin/users" : "/select-workspace",
+      );
     } catch (error) {
       setError(
         getErrorMessage(
@@ -307,17 +309,8 @@ export const Login: React.FC = () => {
             color: "#64748b",
           }}
         >
-          Chưa có tài khoản?{" "}
-          <Link
-            to="/register"
-            style={{
-              color: "#4facfe",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
-          >
-            Tạo tài khoản mới
-          </Link>
+          Bản demo hiện dùng tài khoản seed để đảm bảo luồng thi ổn định và
+          không phụ thuộc vào register API.
         </div>
 
         {/* Demo Account Box */}
@@ -353,10 +346,11 @@ export const Login: React.FC = () => {
             }}
           >
             <div>
-              <strong>Admin:</strong> admin / password123 (Có toàn quyền)
+              <strong>Admin:</strong> admin / password123 (Quản trị hệ thống)
             </div>
             <div>
-              <strong>Viewer:</strong> viewer / password123 (Chỉ xem báo cáo)
+              <strong>User:</strong> viewer / password123 (Chọn workspace để làm
+              việc)
             </div>
           </div>
         </div>

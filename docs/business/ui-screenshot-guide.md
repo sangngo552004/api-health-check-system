@@ -517,29 +517,58 @@ Cho thấy workspace admin có thể thêm thành viên và gán role.
 
 - ...
 
-## 9. Placeholder / Incomplete Screens
+## 9. Incident Screens
 
-## 9.1. Incidents Placeholder Screen
+## 9.1. Incidents List Screen
 
 ### Mục đích
 
-Dùng nếu bạn muốn trung thực trong báo cáo rằng module incident UI riêng vẫn đang là phần đang phát triển.
+Cho thấy hệ thống đã có mô-đun incidents riêng, không còn chỉ dừng ở dashboard summary.
 
 ### Nên chụp gì
 
-- màn hình placeholder incidents
+- bộ lọc theo trạng thái
+- danh sách incident
+- endpoint name, severity, thời điểm mở
 
 ### Gợi ý caption
 
-“Màn hình incidents ở trạng thái placeholder, là phần dự kiến hoàn thiện tiếp theo.”
+“Màn hình danh sách incident cho phép lọc và theo dõi các sự cố theo workspace.”
 
 ### Screenshot
 
-![TODO](../assets/ui/incidents-placeholder.png)
+![TODO](../assets/ui/incidents-list.png)
 
 ### Notes
 
-- Nếu không muốn nhấn mạnh phần chưa xong trong báo cáo chính, bạn có thể bỏ ảnh này.
+- Nên chụp khi có ít nhất 1 incident `OPEN` để ảnh có điểm nhấn.
+
+## 9.2. Incident Detail Panel
+
+### Mục đích
+
+Cho thấy hệ thống không chỉ liệt kê sự cố mà còn cung cấp thông tin chi tiết phục vụ phân tích vận hành.
+
+### Nên chụp gì
+
+- endpoint liên quan
+- trạng thái incident
+- thời điểm mở/đóng
+- severity
+- failure count
+- root cause hoặc failing result ids nếu có
+
+### Gợi ý caption
+
+“Panel chi tiết incident hỗ trợ phân tích nguyên nhân và vòng đời sự cố.”
+
+### Screenshot
+
+![TODO](../assets/ui/incidents-detail.png)
+
+### Notes
+
+- Ảnh này rất hợp để đưa vào chương kết quả đồ án.
 
 ## 10. UX / Interaction Cases nên cân nhắc chụp thêm
 
@@ -614,6 +643,7 @@ Nếu bạn cần nộp nhanh, chỉ cần chụp tối thiểu:
 7. Alert Rule List hoặc Form
 8. Contact Group List hoặc Form
 9. Members List
+10. Incidents List
 
 ## 12. Gợi ý trình bày trong báo cáo
 
@@ -637,7 +667,13 @@ Bạn có thể chia ảnh UI trong báo cáo thành 4 nhóm:
 - alert rule
 - contact group
 
-### Nhóm 4. Workspace Administration
+### Nhóm 4. Incident Monitoring
+
+- incidents list
+- incident detail
+- webhook receiver
+
+### Nhóm 5. Workspace Administration
 
 - member management
 - workspace context

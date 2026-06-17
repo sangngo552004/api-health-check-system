@@ -11,7 +11,6 @@ import com.example.apihealthchecksystem.application.exception.ResourceNotFoundEx
 import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.domain.model.Workspace;
-import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +40,7 @@ class ManageWorkspaceServiceTest {
     assertNotNull(result);
     assertEquals("Team A", result.name());
     verify(workspaceRepository).save(any());
-    verify(workspaceRepository).addMember(10L, userId, WorkspaceRole.ADMIN);
+    verify(workspaceRepository).addMember(10L, userId);
   }
 
   @Test
@@ -101,8 +100,8 @@ class ManageWorkspaceServiceTest {
   void addMember_shouldCallRepository() {
     when(workspaceRepository.findById(10L))
         .thenReturn(Optional.of(Workspace.builder().id(10L).build()));
-    service.addMember(10L, 2L, "MEMBER");
-    verify(workspaceRepository).addMember(10L, 2L, WorkspaceRole.MEMBER);
+    service.addMember(10L, 2L);
+    verify(workspaceRepository).addMember(10L, 2L);
   }
 
   @Test

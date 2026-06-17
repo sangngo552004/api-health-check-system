@@ -77,6 +77,11 @@
 - `GET /api/v1/dashboard/stats`
 - `GET /api/v1/dashboard/endpoints/{endpointId}/latency`
 
+### Incidents
+
+- `GET /api/v1/incidents`
+- `GET /api/v1/incidents/{id}`
+
 ### Health and docs
 
 - `GET /api/v1/health`
@@ -112,10 +117,9 @@ Lỗi validation trả thêm trường `errors` theo field.
 ## Security model
 
 - Tất cả API trừ auth, actuator và swagger đều yêu cầu xác thực.
-- API theo workspace dùng `X-Workspace-Id` + `@PreAuthorize`.
-- Quyền `member`: đọc dữ liệu trong workspace.
-- Quyền `workspace admin`: tạo/sửa/xóa tài nguyên trong workspace.
-- Quyền `ADMIN`: tạo/xóa workspace toàn cục.
+- API theo workspace dùng `X-Workspace-Id` + kiểm tra membership trong workspace.
+- Mọi member trong workspace đều có toàn quyền trên tài nguyên nghiệp vụ của workspace.
+- Quyền `SUPER_ADMIN`: tạo/sửa/xóa workspace, quản lý member workspace và truy cập toàn cục.
 
 ## Persistence
 
@@ -126,6 +130,6 @@ Lỗi validation trả thêm trường `errors` theo field.
 ## Điểm chưa hoàn chỉnh cần biết
 
 - Chưa có API đăng ký người dùng mới.
-- Chưa có REST API riêng cho incident listing/history.
-- Notification adapter thật chưa có; `LogNotificationAdapter` chủ yếu phục vụ demo và debug.
+- Notification hiện đã gửi được qua webhook, nhưng email/Slack adapter production-ready vẫn chưa có.
 - `alertRuleIds` và `contactGroupIds` đã có mặt trong model endpoint nhưng luồng notification hiện chưa tận dụng đầy đủ.
+- `GET /api/v1/incidents` hiện phục vụ tốt cho demo/list/filter cơ bản, chưa phải incident workflow hoàn chỉnh nhiều bước.

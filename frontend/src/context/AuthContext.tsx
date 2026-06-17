@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api, setInMemoryToken } from "../services/api";
 import {
   AuthContext,
@@ -10,7 +10,7 @@ import {
 interface JwtPayload {
   sub: string;
   username?: string;
-  roles?: string[];
+  role?: "SUPER_ADMIN" | "USER";
 }
 
 // Helper decode JWT
@@ -35,49 +35,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initStartedRef = useRef(false);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("refresh_token");
+    void api.post("/auth/logout").catch(() => undefined);
     localStorage.removeItem("workspace_id");
     setInMemoryToken(null);
     setUser(null);
   }, []);
 
   const initAuth = useCallback(async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Dùng Refresh Token để đổi lấy Access Token mới đẩy vào Memory
-      const response = await api.post<LoginResponse>("/auth/refresh", {
-        refreshToken,
-      });
+      // Access token không được persist; khi app khởi động sẽ dùng refresh cookie để xin token mới.
+      const response = await api.post<LoginResponse>("/auth/refresh");
 
       setInMemoryToken(response.accessToken);
-      localStorage.setItem("refresh_token", response.refreshToken); // Cuộn token nếu có
 
       const payload = decodeJwt(response.accessToken);
       if (payload) {
         setUser({
           id: parseInt(payload.sub, 10),
           username: payload.username || "User",
-          role: payload.roles?.[0] || "MEMBER",
+          role: payload.role || "USER",
         });
       }
     } catch (error) {
       console.warn("Auto login failed. Session expired.", error);
-      localStorage.removeItem("refresh_token");
       setInMemoryToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    initAuth();
+    if (!initStartedRef.current) {
+      initStartedRef.current = true;
+      void initAuth();
+    }
 
     // Lắng nghe event logout từ api client
     const handleLogoutEvent = () => logout();
@@ -88,16 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(async (credentials: LoginCredentials) => {
     const response = await api.post<LoginResponse>("/auth/login", credentials);
 
-    // Bảo mật: Access Token lưu trên RAM, Refresh Token lưu LocalStorage
+    // Access token chỉ lưu trên RAM; refresh token nằm trong HttpOnly cookie của backend.
     setInMemoryToken(response.accessToken);
-    localStorage.setItem("refresh_token", response.refreshToken);
 
     const payload = decodeJwt(response.accessToken);
     if (payload) {
       setUser({
         id: parseInt(payload.sub, 10),
         username: payload.username || "User",
-        role: payload.roles?.[0] || "MEMBER",
+        role: payload.role || "USER",
       });
     }
     return response;

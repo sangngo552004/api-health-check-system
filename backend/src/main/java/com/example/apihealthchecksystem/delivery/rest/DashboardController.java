@@ -22,14 +22,16 @@ public class DashboardController {
   private final GetDashboardStatsUseCase dashboardUseCase;
 
   @GetMapping("/stats")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<WorkspaceDashboardStatsDto> getWorkspaceStats(
       @RequestHeader("X-Workspace-Id") Long workspaceId) {
     return ApiResponse.success(dashboardUseCase.getWorkspaceDashboardStats(workspaceId));
   }
 
   @GetMapping("/endpoints/{endpointId}/latency")
-  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId, authentication.principal.id)")
+  @PreAuthorize(
+      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
   public ApiResponse<List<EndpointLatencyDto>> getEndpointLatency(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long endpointId,

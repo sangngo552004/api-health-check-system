@@ -1,6 +1,5 @@
 package com.example.apihealthchecksystem.domain.model;
 
-import com.example.apihealthchecksystem.domain.valueobject.WorkspaceRole;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +9,5 @@ import lombok.Data;
 public class WorkspaceMember {
   private Long workspaceId;
   private Long userId;
-  private WorkspaceRole role;
   private LocalDateTime joinedAt;
 }

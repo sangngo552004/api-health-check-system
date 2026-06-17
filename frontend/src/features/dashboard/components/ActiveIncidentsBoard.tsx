@@ -1,6 +1,7 @@
 import React from "react";
 import { Zap, CheckCircle, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { IncidentSummaryDto } from "../types";
 
 export const ActiveIncidentsBoard: React.FC<{
@@ -49,6 +50,18 @@ export const ActiveIncidentsBoard: React.FC<{
             {count} {t("dashboard.incidentsDesc", "sự cố cần chú ý")}
           </p>
         </div>
+        <Link
+          to="/incidents?status=OPEN"
+          style={{
+            marginLeft: "auto",
+            color: "var(--accent-color)",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            textDecoration: "none",
+          }}
+        >
+          Xem tất cả
+        </Link>
       </div>
 
       <div
@@ -72,56 +85,67 @@ export const ActiveIncidentsBoard: React.FC<{
                 borderLeft: `4px solid ${incident.severity === "CRITICAL" ? "var(--error-color)" : "var(--warning-color)"}`,
               }}
             >
-              <div
+              <Link
+                to={`/incidents?incidentId=${incident.id}&endpointId=${incident.endpointId}&status=OPEN`}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "8px",
+                  color: "inherit",
+                  textDecoration: "none",
+                  display: "block",
                 }}
               >
-                <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>
-                  {incident.endpointName}
-                </span>
-                <span
+                <div
                   style={{
-                    fontSize: "0.7rem",
-                    padding: "2px 8px",
-                    borderRadius: "12px",
-                    background:
-                      incident.severity === "CRITICAL"
-                        ? "rgba(239, 68, 68, 0.2)"
-                        : "rgba(245, 158, 11, 0.2)",
-                    color:
-                      incident.severity === "CRITICAL" ? "#ef4444" : "#f59e0b",
-                    fontWeight: 600,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "8px",
                   }}
                 >
-                  {incident.severity}
-                </span>
-              </div>
-              <p
-                style={{
-                  color: "var(--text-secondary)",
-                  fontSize: "0.85rem",
-                  margin: "0 0 8px 0",
-                  lineHeight: 1.4,
-                }}
-              >
-                {incident.reason}
-              </p>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--text-muted)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <Clock size={12} />
-                {new Date(incident.startedAt).toLocaleString("vi-VN")}
-              </div>
+                  <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+                    {incident.endpointName}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      padding: "2px 8px",
+                      borderRadius: "12px",
+                      background:
+                        incident.severity === "CRITICAL"
+                          ? "rgba(239, 68, 68, 0.2)"
+                          : "rgba(245, 158, 11, 0.2)",
+                      color:
+                        incident.severity === "CRITICAL"
+                          ? "#ef4444"
+                          : "#f59e0b",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {incident.severity}
+                  </span>
+                </div>
+                <p
+                  style={{
+                    color: "var(--text-secondary)",
+                    fontSize: "0.85rem",
+                    margin: "0 0 8px 0",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {incident.reason}
+                </p>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-muted)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <Clock size={12} />
+                  {new Date(incident.startedAt).toLocaleString("vi-VN")}
+                </div>
+              </Link>
             </div>
           ))
         ) : (

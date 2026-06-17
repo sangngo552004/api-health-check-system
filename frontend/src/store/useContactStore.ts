@@ -11,7 +11,7 @@ interface ContactState {
   contactGroups: ContactGroupDto[];
   loading: boolean;
   error: string | null;
-  totalElements: number;
+  totalItems: number;
   totalPages: number;
   currentPage: number;
 
@@ -28,7 +28,7 @@ export const useContactStore = create<ContactState>((set, get) => ({
   contactGroups: [],
   loading: false,
   error: null,
-  totalElements: 0,
+  totalItems: 0,
   totalPages: 0,
   currentPage: 0,
 
@@ -37,8 +37,8 @@ export const useContactStore = create<ContactState>((set, get) => ({
     try {
       const res = await contactsApi.getContactGroups(page, size);
       set({
-        contactGroups: res.content,
-        totalElements: res.totalElements,
+        contactGroups: res.items,
+        totalItems: res.totalItems,
         totalPages: res.totalPages,
         currentPage: page,
         loading: false,

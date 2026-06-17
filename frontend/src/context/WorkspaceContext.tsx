@@ -16,6 +16,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
 
   const fetchWorkspaces = useCallback(async (): Promise<Workspace[]> => {
+    if (!user || user.role !== "USER") {
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+      localStorage.removeItem("workspace_id");
+      return [];
+    }
+
     setLoadingWorkspaces(true);
     try {
       const data = await api.get<Workspace[]>("/workspaces/my");
@@ -45,14 +52,15 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setLoadingWorkspaces(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    if (user) {
-      fetchWorkspaces();
+    if (user?.role === "USER") {
+      void fetchWorkspaces();
     } else {
       setWorkspaces([]);
       setActiveWorkspace(null);
+      localStorage.removeItem("workspace_id");
     }
   }, [fetchWorkspaces, user]);
 
