@@ -9,4 +9,5 @@ public record WorkspaceDashboardStatsDto(
     long downEndpoints,
     long degradedEndpoints,
     long openIncidentsCount,
-    List<IncidentSummaryDto> activeIncidents) {}
+    List<IncidentSummaryDto> activeIncidents,
+    List<DashboardLatencySeriesDto> latencySeries) {}

@@ -33,7 +33,7 @@ public class MonitoredEndpointController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> createEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @CurrentUserId Long currentUserId,
@@ -43,7 +43,7 @@ public class MonitoredEndpointController {
 
   @PutMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> updateEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -68,7 +68,7 @@ public class MonitoredEndpointController {
 
   @GetMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<EndpointDto> getEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(endpointUseCase.getEndpoint(workspaceId, id));
@@ -76,18 +76,38 @@ public class MonitoredEndpointController {
 
   @GetMapping
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<EndpointDto>> getEndpoints(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) String environment,
+      @RequestParam(required = false) String status,
+      @RequestParam(required = false) String method,
+      @RequestParam(required = false) String checkType,
+      @RequestParam(required = false) Boolean isActive,
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.success(endpointUseCase.getEndpointsByWorkspace(workspaceId, page, size));
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDir) {
+    return ApiResponse.success(
+        endpointUseCase.getEndpointsByWorkspace(
+            workspaceId,
+            search,
+            environment,
+            status,
+            method,
+            checkType,
+            isActive,
+            page,
+            size,
+            sortBy,
+            sortDir));
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public void deleteEndpoint(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     endpointUseCase.deleteEndpoint(workspaceId, id);

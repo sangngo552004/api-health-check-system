@@ -7,6 +7,8 @@ export const inputStyle: React.CSSProperties = {
   border: "1px solid var(--card-border)",
   background: "var(--bg-secondary)",
   color: "var(--text-primary)",
+  fontFamily: "inherit",
+  fontSize: "0.95rem",
 };
 
 export const primaryButton: React.CSSProperties = {
@@ -19,6 +21,8 @@ export const primaryButton: React.CSSProperties = {
   background: "linear-gradient(135deg, #f97316, #fb7185)",
   color: "#fff",
   fontWeight: 700,
+  fontFamily: "inherit",
+  fontSize: "0.95rem",
   cursor: "pointer",
 };
 
@@ -31,6 +35,8 @@ export const secondaryButton: React.CSSProperties = {
   border: "1px solid var(--card-border)",
   background: "var(--bg-secondary)",
   color: "var(--text-primary)",
+  fontFamily: "inherit",
+  fontSize: "0.95rem",
   cursor: "pointer",
 };
 
@@ -53,10 +59,11 @@ export const overlayStyle: React.CSSProperties = {
   background: "rgba(15,23,42,0.45)",
   backdropFilter: "blur(6px)",
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   padding: "24px",
   zIndex: 100,
+  overflowY: "auto",
 };
 
 export const modalStyle: React.CSSProperties = {

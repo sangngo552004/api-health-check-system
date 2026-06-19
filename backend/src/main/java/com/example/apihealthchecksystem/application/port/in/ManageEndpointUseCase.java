@@ -12,7 +12,18 @@ public interface ManageEndpointUseCase {
 
   EndpointDto getEndpoint(Long workspaceId, Long id);
 
-  PagedResponseDto<EndpointDto> getEndpointsByWorkspace(Long workspaceId, int page, int size);
+  PagedResponseDto<EndpointDto> getEndpointsByWorkspace(
+      Long workspaceId,
+      String search,
+      String environment,
+      String status,
+      String method,
+      String checkType,
+      Boolean isActive,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir);
 
   void deleteEndpoint(Long workspaceId, Long id);
 }

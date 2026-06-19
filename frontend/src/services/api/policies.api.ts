@@ -6,10 +6,20 @@ import {
 } from "../../types/policy.types";
 import { PagedResponseDto } from "../../types/common.types";
 
+export interface CheckPolicyListParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  expectedStatusCode?: number;
+  hasDegradedResponseTimeThreshold?: boolean;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
 export const policiesApi = {
-  getPolicies: (page = 0, size = 10) => {
+  getPolicies: (params?: CheckPolicyListParams) => {
     return api.get<PagedResponseDto<CheckPolicyDto>>("/check-policies", {
-      params: { page, size },
+      params: params as Record<string, string | number | boolean | undefined>,
     });
   },
 

@@ -1,4 +1,5 @@
 import { api } from "../api";
+import type { AppRole } from "../../context/auth-context";
 import {
   AdminUserCreateCommand,
   AdminUserDto,
@@ -36,7 +37,7 @@ export const workspacesApi = {
     page?: number;
     size?: number;
     search?: string;
-    role?: "SUPER_ADMIN" | "USER";
+    role?: AppRole;
     isActive?: boolean;
     sortBy?: string;
     sortDir?: "asc" | "desc";
@@ -98,15 +99,18 @@ export const workspacesApi = {
     return api.delete<void>(`/workspaces/${workspaceId}`);
   },
   getMembers: (workspaceId: number) => {
-    return api.get<WorkspaceMemberDto[]>(`/workspaces/${workspaceId}/members`);
+    return api.get<WorkspaceMemberDto[]>(
+      `/admin/workspaces/${workspaceId}/members`,
+    );
   },
   addMember: (workspaceId: number, userId: number) => {
-    // Controller đang dùng RequestParam thay vì Body
-    return api.post<void>(`/workspaces/${workspaceId}/members`, null, {
+    return api.post<void>(`/admin/workspaces/${workspaceId}/members`, null, {
       params: { userId },
     });
   },
   removeMember: (workspaceId: number, userId: number) => {
-    return api.delete<void>(`/workspaces/${workspaceId}/members/${userId}`);
+    return api.delete<void>(
+      `/admin/workspaces/${workspaceId}/members/${userId}`,
+    );
   },
 };

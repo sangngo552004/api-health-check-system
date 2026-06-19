@@ -2,6 +2,7 @@ package com.example.apihealthchecksystem.infrastructure.persistence.entity;
 
 import com.example.apihealthchecksystem.domain.valueobject.AlertRuleType;
 import com.example.apihealthchecksystem.domain.valueobject.ComparisonOperator;
+import com.example.apihealthchecksystem.domain.valueobject.IncidentSeverity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -34,11 +35,15 @@ public class AlertRuleJpaEntity extends BaseJpaEntity {
   private AlertRuleType ruleType;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
+  @Column(length = 20)
   private ComparisonOperator operator;
 
   @Column(name = "threshold_value")
   private Double thresholdValue;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private IncidentSeverity severity;
 
   @Column(name = "is_active")
   private Boolean isActive;
@@ -49,9 +54,6 @@ public class AlertRuleJpaEntity extends BaseJpaEntity {
       joinColumns = @JoinColumn(name = "alert_rule_id"))
   @Column(name = "contact_group_id")
   private List<Long> contactGroupIds;
-
-  @Column(name = "override_default_contacts")
-  private Boolean overrideDefaultContacts;
 
   @Column(name = "created_by")
   private Long createdBy;

@@ -9,86 +9,6 @@
     "description" : "Generated server url"
   } ],
   "paths" : {
-    "/api/v1/workspaces/{id}" : {
-      "get" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "getWorkspace",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ApiResponseWorkspaceDto"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "updateWorkspace",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/WorkspaceUpdateCommand"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ApiResponseWorkspaceDto"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "deleteWorkspace",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
-          }
-        }
-      }
-    },
     "/api/v1/endpoints/{id}" : {
       "get" : {
         "tags" : [ "monitored-endpoint-controller" ],
@@ -533,7 +453,7 @@
       },
       "put" : {
         "tags" : [ "admin-controller" ],
-        "operationId" : "updateWorkspace_1",
+        "operationId" : "updateWorkspace",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -568,7 +488,7 @@
       },
       "delete" : {
         "tags" : [ "admin-controller" ],
-        "operationId" : "deleteWorkspace_1",
+        "operationId" : "deleteWorkspace",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -665,87 +585,6 @@
         }
       }
     },
-    "/api/v1/workspaces" : {
-      "post" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "createWorkspace",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/WorkspaceCreateCommand"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ApiResponseWorkspaceDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/workspaces/{id}/members" : {
-      "get" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "getMembers",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ApiResponseListWorkspaceMemberDto"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "addMember",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "userId",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK"
-          }
-        }
-      }
-    },
     "/api/v1/endpoints" : {
       "get" : {
         "tags" : [ "monitored-endpoint-controller" ],
@@ -757,6 +596,48 @@
           "schema" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }, {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "environment",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "method",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "checkType",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "isActive",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
           }
         }, {
           "name" : "page",
@@ -775,6 +656,22 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 10
+          }
+        }, {
+          "name" : "sortBy",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "createdAt"
+          }
+        }, {
+          "name" : "sortDir",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "desc"
           }
         } ],
         "responses" : {
@@ -839,6 +736,20 @@
             "format" : "int64"
           }
         }, {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "isActive",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -855,6 +766,22 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 10
+          }
+        }, {
+          "name" : "sortBy",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "createdAt"
+          }
+        }, {
+          "name" : "sortDir",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "desc"
           }
         } ],
         "responses" : {
@@ -919,6 +846,28 @@
             "format" : "int64"
           }
         }, {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "expectedStatusCode",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "hasLatencyThreshold",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -935,6 +884,22 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 10
+          }
+        }, {
+          "name" : "sortBy",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "createdAt"
+          }
+        }, {
+          "name" : "sortDir",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "desc"
           }
         } ],
         "responses" : {
@@ -1063,6 +1028,34 @@
             "format" : "int64"
           }
         }, {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "ruleType",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "operator",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "isActive",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -1079,6 +1072,22 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 10
+          }
+        }, {
+          "name" : "sortBy",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "createdAt"
+          }
+        }, {
+          "name" : "sortDir",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "desc"
           }
         } ],
         "responses" : {
@@ -1206,7 +1215,7 @@
       },
       "post" : {
         "tags" : [ "admin-controller" ],
-        "operationId" : "createWorkspace_1",
+        "operationId" : "createWorkspace",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1227,6 +1236,59 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/workspaces/{id}/members" : {
+      "get" : {
+        "tags" : [ "admin-controller" ],
+        "operationId" : "getWorkspaceMembers",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListWorkspaceMemberDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "admin-controller" ],
+        "operationId" : "addWorkspaceMember",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -1362,7 +1424,21 @@
             "format" : "int64"
           }
         }, {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "status",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "severity",
           "in" : "query",
           "required" : false,
           "schema" : {
@@ -1393,6 +1469,22 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 10
+          }
+        }, {
+          "name" : "sortBy",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "startedAt"
+          }
+        }, {
+          "name" : "sortDir",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "desc"
           }
         } ],
         "responses" : {
@@ -1536,10 +1628,10 @@
         }
       }
     },
-    "/api/v1/workspaces/{id}/members/{userId}" : {
+    "/api/v1/admin/workspaces/{id}/members/{userId}" : {
       "delete" : {
-        "tags" : [ "workspace-controller" ],
-        "operationId" : "removeMember",
+        "tags" : [ "admin-controller" ],
+        "operationId" : "removeWorkspaceMember",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -1567,81 +1659,6 @@
   },
   "components" : {
     "schemas" : {
-      "WorkspaceUpdateCommand" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "isActive" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "id", "name" ]
-      },
-      "ApiResponseWorkspaceDto" : {
-        "type" : "object",
-        "properties" : {
-          "success" : {
-            "type" : "boolean"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/WorkspaceDto"
-          },
-          "errors" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "WorkspaceDto" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          },
-          "ownerId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "isActive" : {
-            "type" : "boolean"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
       "EndpointUpdateCommand" : {
         "type" : "object",
         "properties" : {
@@ -1816,20 +1833,7 @@
           "isActive" : {
             "type" : "boolean"
           },
-          "userIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
           "emailAddresses" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "webhookUrls" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -1885,20 +1889,7 @@
           "isActive" : {
             "type" : "boolean"
           },
-          "userIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
           "emailAddresses" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "webhookUrls" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -2158,6 +2149,62 @@
         },
         "required" : [ "name", "ownerId", "slug" ]
       },
+      "ApiResponseWorkspaceDto" : {
+        "type" : "object",
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/WorkspaceDto"
+          },
+          "errors" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "WorkspaceDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "ownerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "AdminUserUpdateCommand" : {
         "type" : "object",
         "properties" : {
@@ -2183,7 +2230,7 @@
           },
           "role" : {
             "type" : "string",
-            "enum" : [ "SUPER_ADMIN", "USER" ]
+            "enum" : [ "ADMIN", "USER" ]
           },
           "isActive" : {
             "type" : "boolean"
@@ -2245,21 +2292,6 @@
           }
         }
       },
-      "WorkspaceCreateCommand" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "name", "slug" ]
-      },
       "EndpointCreateCommand" : {
         "type" : "object",
         "properties" : {
@@ -2319,20 +2351,7 @@
           "description" : {
             "type" : "string"
           },
-          "userIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
           "emailAddresses" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "webhookUrls" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -2549,7 +2568,7 @@
           },
           "role" : {
             "type" : "string",
-            "enum" : [ "SUPER_ADMIN", "USER" ]
+            "enum" : [ "ADMIN", "USER" ]
           },
           "isActive" : {
             "type" : "boolean"
@@ -2559,55 +2578,6 @@
           }
         },
         "required" : [ "password", "role", "username" ]
-      },
-      "ApiResponseListWorkspaceMemberDto" : {
-        "type" : "object",
-        "properties" : {
-          "success" : {
-            "type" : "boolean"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          },
-          "data" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/WorkspaceMemberDto"
-            }
-          },
-          "errors" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "WorkspaceMemberDto" : {
-        "type" : "object",
-        "properties" : {
-          "userId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "username" : {
-            "type" : "string"
-          },
-          "email" : {
-            "type" : "string"
-          },
-          "joinedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
       },
       "ApiResponseListWorkspaceDto" : {
         "type" : "object",
@@ -3172,6 +3142,55 @@
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }
+      },
+      "ApiResponseListWorkspaceMemberDto" : {
+        "type" : "object",
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WorkspaceMemberDto"
+            }
+          },
+          "errors" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "WorkspaceMemberDto" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "username" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "joinedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },

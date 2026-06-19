@@ -53,32 +53,40 @@ public class TcpHealthCheckExecutor implements HealthCheckExecutor {
           ex.getMessage());
     }
 
-    try (Socket socket = new Socket()) {
-      socket.connect(new InetSocketAddress(host, port), timeoutMillis);
+    Exception lastException = null;
+    for (int attempt = 0; attempt <= policy.effectiveRetryCount(); attempt++) {
+      try (Socket socket = new Socket()) {
+        socket.connect(new InetSocketAddress(host, port), timeoutMillis);
 
-      long responseTime = System.currentTimeMillis() - startTime;
-      CheckStatus status = CheckStatus.UP;
-      String errorMessage = null;
+        long responseTime = System.currentTimeMillis() - startTime;
+        CheckStatus status = CheckStatus.UP;
+        String errorMessage = null;
 
-      if (policy.hasLatencyThreshold() && responseTime > policy.getLatencyThresholdMillis()) {
-        status = CheckStatus.DEGRADED;
-        errorMessage = "High latency: " + responseTime + "ms";
+        if (policy.hasDegradedResponseTimeThreshold()
+            && responseTime > policy.getDegradedResponseTimeMillis()) {
+          status = CheckStatus.DEGRADED;
+          errorMessage = "High latency: " + responseTime + "ms";
+        }
+
+        return HealthCheckResult.builder()
+            .endpointId(endpoint.getId())
+            .workspaceId(endpoint.getWorkspaceId())
+            .checkedAt(checkedAt)
+            .status(status)
+            .responseTimeMillis(responseTime)
+            .success(true)
+            .errorMessage(errorMessage)
+            .nodeId(System.getProperty("app.scheduler.node-id", "local"))
+            .build();
+
+      } catch (Exception e) {
+        lastException = e;
       }
+    }
 
-      return HealthCheckResult.builder()
-          .endpointId(endpoint.getId())
-          .workspaceId(endpoint.getWorkspaceId())
-          .checkedAt(checkedAt)
-          .status(status)
-          .responseTimeMillis(responseTime)
-          .success(true)
-          .errorMessage(errorMessage)
-          .nodeId(System.getProperty("app.scheduler.node-id", "local"))
-          .build();
-
-    } catch (Exception e) {
+    if (lastException != null) {
       long responseTime = System.currentTimeMillis() - startTime;
-      log.error("Lỗi khi kết nối TCP tới {}:{}: {}", host, port, e.getMessage());
+      log.error("Lỗi khi kết nối TCP tới {}:{}: {}", host, port, lastException.getMessage());
       return HealthCheckResult.builder()
           .endpointId(endpoint.getId())
           .workspaceId(endpoint.getWorkspaceId())
@@ -86,9 +94,11 @@ public class TcpHealthCheckExecutor implements HealthCheckExecutor {
           .status(CheckStatus.DOWN)
           .responseTimeMillis(responseTime)
           .success(false)
-          .errorMessage("Connection failed: " + e.getMessage())
+          .errorMessage("Connection failed: " + lastException.getMessage())
           .nodeId(System.getProperty("app.scheduler.node-id", "local"))
           .build();
     }
+
+    throw new IllegalStateException("TCP health check failed without exception");
   }
 }

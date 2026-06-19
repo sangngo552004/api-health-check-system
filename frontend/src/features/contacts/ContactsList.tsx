@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useToast } from "../../context/useToast";
 import { useContactStore } from "../../store/useContactStore";
 import {
   ContactGroupCreateCommand,
@@ -6,7 +7,7 @@ import {
   ContactGroupUpdateCommand,
 } from "../../types/contact.types";
 import { getErrorMessage } from "../../utils/error";
-import { ContactForm } from "./ContactForm";
+import { ContactForm, ContactFormData } from "./ContactForm";
 import { ContactsTable } from "./ContactsTable";
 import { ContactsToolbar } from "./ContactsToolbar";
 
@@ -19,19 +20,27 @@ export const ContactsList: React.FC = () => {
     updateContactGroup,
     deleteContactGroup,
   } = useContactStore();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContact, setEditingContact] =
     useState<ContactGroupUpdateCommand | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchContactGroups(0, 100);
-  }, [fetchContactGroups]);
-
-  const filteredContacts = contactGroups.filter((contact) =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+    void fetchContactGroups({
+      page: 0,
+      size: 100,
+      search: searchTerm.trim() || undefined,
+      isActive:
+        statusFilter === "" ? undefined : statusFilter === "true",
+      sortBy,
+      sortDir,
+    });
+  }, [fetchContactGroups, searchTerm, sortBy, sortDir, statusFilter]);
 
   const handleAdd = () => {
     setEditingContact(null);
@@ -44,9 +53,7 @@ export const ContactsList: React.FC = () => {
       name: contact.name,
       description: contact.description,
       isActive: contact.isActive,
-      userIds: contact.userIds,
       emailAddresses: contact.emailAddresses,
-      webhookUrls: contact.webhookUrls,
     });
     setIsFormOpen(true);
   };
@@ -56,23 +63,59 @@ export const ContactsList: React.FC = () => {
       return;
     }
 
-    await deleteContactGroup(contactId);
+    try {
+      await deleteContactGroup(contactId);
+      showToast({
+        title: "Xóa nhóm liên hệ thành công",
+        description: "Nhóm liên hệ đã được xóa.",
+        variant: "success",
+      });
+    } catch (error) {
+      showToast({
+        title: "Xóa nhóm liên hệ thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
+    }
   };
 
-  const handleFormSubmit = async (data: ContactGroupCreateCommand) => {
+  const handleFormSubmit = async (data: ContactFormData) => {
     setSubmitting(true);
     try {
       if (editingContact) {
-        await updateContactGroup(editingContact.id, {
+        const payload: ContactGroupUpdateCommand = {
           ...data,
           id: editingContact.id,
+          isActive: data.isActive,
+        };
+        await updateContactGroup(editingContact.id, payload);
+        showToast({
+          title: "Cập nhật nhóm liên hệ thành công",
+          description: `Nhóm ${data.name} đã được cập nhật.`,
+          variant: "success",
         });
       } else {
-        await createContactGroup(data);
+        const payload: ContactGroupCreateCommand = {
+          name: data.name,
+          description: data.description,
+          emailAddresses: data.emailAddresses,
+        };
+        await createContactGroup(payload);
+        showToast({
+          title: "Tạo nhóm liên hệ thành công",
+          description: `Nhóm ${data.name} đã được tạo.`,
+          variant: "success",
+        });
       }
       setIsFormOpen(false);
     } catch (error) {
-      alert(getErrorMessage(error));
+      showToast({
+        title: editingContact
+          ? "Cập nhật nhóm liên hệ thất bại"
+          : "Tạo nhóm liên hệ thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -84,11 +127,42 @@ export const ContactsList: React.FC = () => {
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         onCreate={handleAdd}
+        filters={
+          <>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              style={filterStyle}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="true">Đang bật</option>
+              <option value="false">Đang tắt</option>
+            </select>
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              style={filterStyle}
+            >
+              <option value="createdAt">Mới tạo gần đây</option>
+              <option value="name">Tên nhóm</option>
+            </select>
+            <select
+              value={sortDir}
+              onChange={(event) =>
+                setSortDir(event.target.value as "asc" | "desc")
+              }
+              style={filterStyle}
+            >
+              <option value="desc">Giảm dần</option>
+              <option value="asc">Tăng dần</option>
+            </select>
+          </>
+        }
       />
 
       <ContactsTable
         loading={loading}
-        contacts={filteredContacts}
+        contacts={contactGroups}
         onEdit={handleEdit}
         onDelete={(contactId) => void handleDelete(contactId)}
       />
@@ -103,4 +177,13 @@ export const ContactsList: React.FC = () => {
       )}
     </div>
   );
+};
+
+const filterStyle: React.CSSProperties = {
+  minWidth: "170px",
+  padding: "10px 14px",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--card-border)",
+  borderRadius: "10px",
+  color: "var(--text-primary)",
 };

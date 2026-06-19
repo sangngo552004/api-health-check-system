@@ -9,16 +9,15 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { PagedResponseDto } from "../../types/common.types";
 import { StatCard } from "./components/StatCard";
 import { LatencyChart } from "./components/LatencyChart";
 import { ActiveIncidentsBoard } from "./components/ActiveIncidentsBoard";
 import {
-  DashboardEndpointSummary,
-  EndpointLatencyDto,
+  DashboardActiveIncidentsDto,
+  DashboardLatencyChartDto,
+  DashboardStatsSummaryDto,
   LatencyChartLine,
   LatencyChartPoint,
-  WorkspaceDashboardStatsDto,
 } from "./types";
 import { getErrorMessage } from "../../utils/error";
 
@@ -26,7 +25,8 @@ export const DashboardOverview: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
   const { t } = useTranslation();
 
-  const [stats, setStats] = useState<WorkspaceDashboardStatsDto | null>(null);
+  const [stats, setStats] = useState<DashboardStatsSummaryDto | null>(null);
+  const [incidents, setIncidents] = useState<DashboardActiveIncidentsDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<LatencyChartPoint[]>([]);
@@ -37,52 +37,45 @@ export const DashboardOverview: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const statsData =
-        await api.get<WorkspaceDashboardStatsDto>("/dashboard/stats");
+      const [statsData, incidentsData, chartResponse] = await Promise.all([
+        api.get<DashboardStatsSummaryDto>("/dashboard/summary"),
+        api.get<DashboardActiveIncidentsDto>("/dashboard/active-incidents"),
+        api.get<DashboardLatencyChartDto>("/dashboard/latency-chart"),
+      ]);
       setStats(statsData);
+      setIncidents(incidentsData);
 
-      const endpointsPage = await api.get<
-        PagedResponseDto<DashboardEndpointSummary>
-      >("/endpoints", { params: { page: 0, size: 10 } });
-      const endpoints = endpointsPage?.items || [];
-      const plotEndpoints = endpoints.slice(0, 3);
+      const plotSeries = chartResponse.series || [];
 
       const colors = ["#38bdf8", "#a855f7", "#10b981"];
-      const lines = plotEndpoints.map((ep, idx) => ({
-        key: ep.name,
+      const lines = plotSeries.map((series, idx) => ({
+        key: series.endpointName,
         color: colors[idx % colors.length],
       }));
       setChartLines(lines);
 
-      const latencyPromises = plotEndpoints.map((ep) =>
-        api.get<EndpointLatencyDto[]>(
-          `/dashboard/endpoints/${ep.id}/latency?limit=20`,
-        ),
-      );
+      if (plotSeries.length === 0) {
+        setChartData([]);
+        return;
+      }
 
-      const latenciesArray = await Promise.all(latencyPromises);
       const timeMap = new Map<string, LatencyChartPoint>();
 
-      latenciesArray.forEach(
-        (latencyList: EndpointLatencyDto[] | undefined, idx: number) => {
-          const epName = plotEndpoints[idx].name;
-          if (latencyList) {
-            latencyList.forEach((lat: EndpointLatencyDto) => {
-              const date = new Date(lat.checkedAt);
-              const timeKey = date.toLocaleTimeString("vi-VN", {
-                hour12: false,
-              });
+      plotSeries.forEach((series) => {
+        series.points.forEach((point) => {
+          const date = new Date(point.checkedAt);
+          const timeKey = date.toLocaleTimeString("vi-VN", {
+            hour12: false,
+          });
 
-              if (!timeMap.has(timeKey)) {
-                timeMap.set(timeKey, { time: timeKey });
-              }
-              const existing = timeMap.get(timeKey) ?? { time: timeKey };
-              existing[epName] = lat.responseTimeMillis;
-              timeMap.set(timeKey, existing);
-            });
+          if (!timeMap.has(timeKey)) {
+            timeMap.set(timeKey, { time: timeKey });
           }
-        },
-      );
+          const existing = timeMap.get(timeKey) ?? { time: timeKey };
+          existing[series.endpointName] = point.responseTimeMillis;
+          timeMap.set(timeKey, existing);
+        });
+      });
 
       const mergedData = Array.from(timeMap.values()).sort((a, b) =>
         a.time.localeCompare(b.time),
@@ -228,8 +221,8 @@ export const DashboardOverview: React.FC = () => {
       >
         <LatencyChart data={chartData} lines={chartLines} />
         <ActiveIncidentsBoard
-          incidents={stats?.activeIncidents || []}
-          count={stats?.openIncidentsCount || 0}
+          incidents={incidents?.incidents || []}
+          count={incidents?.openIncidentsCount || 0}
         />
       </div>
     </div>

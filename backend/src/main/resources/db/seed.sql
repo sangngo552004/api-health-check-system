@@ -4,6 +4,7 @@ BEGIN;
 TRUNCATE TABLE
     refresh_tokens,
     notifications,
+    incident_triggered_alert_rules,
     incident_failing_results,
     incidents,
     health_check_results,
@@ -15,9 +16,7 @@ TRUNCATE TABLE
     alert_rule_contact_groups,
     alert_rules,
     check_policies,
-    contact_group_webhooks,
     contact_group_emails,
-    contact_group_users,
     contact_groups,
     workspace_members,
     workspaces,
@@ -37,7 +36,7 @@ INSERT INTO users (
     created_at,
     updated_at
 ) VALUES
-    (1, 'admin', 'admin@healthcheck.com', '0912345678', '$2a$10$ZCXXhbBA0TwLjSEg7fbK1ugs5CbNy2C2PvUCurCQ6rZY6ZbGyhKri', 'SUPER_ADMIN', true, false, NOW(), NOW()),
+    (1, 'admin', 'admin@healthcheck.com', '0912345678', '$2a$10$ZCXXhbBA0TwLjSEg7fbK1ugs5CbNy2C2PvUCurCQ6rZY6ZbGyhKri', 'ADMIN', true, false, NOW(), NOW()),
     (2, 'viewer', 'viewer@healthcheck.com', '0987654321', '$2a$10$ZCXXhbBA0TwLjSEg7fbK1ugs5CbNy2C2PvUCurCQ6rZY6ZbGyhKri', 'USER', true, false, NOW(), NOW()),
     (3, 'opslead', 'opslead@healthcheck.com', '0900000001', '$2a$10$ZCXXhbBA0TwLjSEg7fbK1ugs5CbNy2C2PvUCurCQ6rZY6ZbGyhKri', 'USER', true, false, NOW(), NOW());
 
@@ -79,21 +78,10 @@ INSERT INTO contact_groups (
     (2, 'Backend Team', 'Nhan canh bao API va auth', true, 1, 1, NOW(), NOW()),
     (3, 'Payment On-call', 'Nhan su co lien quan thanh toan', true, 1, 2, NOW(), NOW());
 
-INSERT INTO contact_group_users (contact_group_id, user_id) VALUES
-    (1, 1),
-    (1, 3),
-    (2, 2),
-    (3, 1),
-    (3, 3);
-
 INSERT INTO contact_group_emails (contact_group_id, email_address) VALUES
     (1, 'devops@healthcheck.local'),
     (2, 'backend@healthcheck.local'),
     (3, 'payments-oncall@healthcheck.local');
-
-INSERT INTO contact_group_webhooks (contact_group_id, webhook_url) VALUES
-    (1, 'https://example.com/webhooks/devops'),
-    (3, 'https://example.com/webhooks/payment');
 
 INSERT INTO check_policies (
     id,
@@ -101,8 +89,7 @@ INSERT INTO check_policies (
     interval_seconds,
     timeout_millis,
     retry_count,
-    failure_threshold,
-    latency_threshold_millis,
+    degraded_response_time_millis,
     expected_status_code,
     expected_response_body,
     response_regex,
@@ -111,10 +98,10 @@ INSERT INTO check_policies (
     created_at,
     updated_at
 ) VALUES
-    (1, 'Standard HTTP', 60, 5000, 2, 3, 2000, 200, NULL, NULL, 1, 1, NOW(), NOW()),
-    (2, 'Critical Auth API', 30, 3000, 2, 2, 1000, 200, 'UP', NULL, 1, 1, NOW(), NOW()),
-    (3, 'Payment Callback', 20, 2500, 1, 2, 800, 200, 'OK', NULL, 1, 2, NOW(), NOW()),
-    (4, 'TCP Port Check', 60, 2000, 1, 3, 500, NULL, NULL, NULL, 1, 2, NOW(), NOW());
+    (1, 'Standard HTTP', 60, 5000, 2, 2000, 200, NULL, NULL, 1, 1, NOW(), NOW()),
+    (2, 'Critical Auth API', 30, 3000, 1, 1000, 200, 'UP', NULL, 1, 1, NOW(), NOW()),
+    (3, 'Payment Callback', 20, 2500, 1, 800, 200, 'OK', NULL, 1, 2, NOW(), NOW()),
+    (4, 'TCP Port Check', 60, 2000, 1, 500, NULL, NULL, NULL, 1, 2, NOW(), NOW());
 
 INSERT INTO alert_rules (
     id,
@@ -122,21 +109,23 @@ INSERT INTO alert_rules (
     rule_type,
     operator,
     threshold_value,
+    severity,
     is_active,
-    override_default_contacts,
     created_by,
     workspace_id,
     created_at,
     updated_at
 ) VALUES
-    (1, 'Latency Warning', 'RESPONSE_TIME_EXCEEDED', 'GT', 1500, true, false, 1, 1, NOW(), NOW()),
-    (2, 'Consecutive Failures', 'CONSECUTIVE_FAILURE', 'GT', 2, true, false, 1, 1, NOW(), NOW()),
-    (3, 'Status Code Mismatch', 'STATUS_CODE_MISMATCH', 'NE', 200, true, true, 1, 2, NOW(), NOW());
+    (1, 'Latency Warning', 'RESPONSE_TIME', 'GTE', 1500, 'WARNING', true, 1, 1, NOW(), NOW()),
+    (2, 'Auth Consecutive Failures', 'CONSECUTIVE_FAILURE', NULL, 3, 'CRITICAL', true, 1, 1, NOW(), NOW()),
+    (3, 'Payment Status Mismatch', 'HTTP_STATUS_CODE', 'NE', 200, 'CRITICAL', true, 1, 2, NOW(), NOW()),
+    (4, 'Payment Slow Response', 'RESPONSE_TIME', 'GTE', 900, 'WARNING', true, 1, 2, NOW(), NOW());
 
 INSERT INTO alert_rule_contact_groups (alert_rule_id, contact_group_id) VALUES
     (1, 1),
     (2, 2),
-    (3, 3);
+    (3, 3),
+    (4, 3);
 
 INSERT INTO monitored_endpoints (
     id,
@@ -152,13 +141,14 @@ INSERT INTO monitored_endpoints (
     request_body,
     created_by,
     last_checked_at,
+    next_run_at,
     created_at,
     updated_at
 ) VALUES
-    (1, 'Demo Service Health', 'http://localhost:8086/actuator/health', 'GET', 'Development', 'HTTP', 1, true, 'UP', 1, NULL, 1, NOW() - INTERVAL '2 minutes', NOW(), NOW()),
-    (2, 'Auth API', 'http://localhost:8080/api/v1/health', 'GET', 'Local', 'HTTP', 1, true, 'DEGRADED', 2, NULL, 1, NOW() - INTERVAL '1 minute', NOW(), NOW()),
-    (3, 'Payment Callback API', 'https://payment.example.com/callback/health', 'POST', 'Production', 'HTTP', 2, true, 'DOWN', 3, '{\"source\":\"seed\"}', 1, NOW() - INTERVAL '30 seconds', NOW(), NOW()),
-    (4, 'Redis TCP', 'tcp://redis.internal:6379', 'GET', 'Production', 'TCP', 2, true, 'UP', 4, NULL, 1, NOW() - INTERVAL '3 minutes', NOW(), NOW());
+    (1, 'Demo Service Health', 'http://localhost:8086/actuator/health', 'GET', 'Development', 'HTTP', 1, true, 'UP', 1, NULL, 1, NOW() - INTERVAL '2 minutes', NOW() - INTERVAL '1 minute', NOW(), NOW()),
+    (2, 'Auth API', 'http://localhost:8080/api/v1/health', 'GET', 'Local', 'HTTP', 1, true, 'DEGRADED', 2, NULL, 1, NOW() - INTERVAL '1 minute', NOW() - INTERVAL '30 seconds', NOW(), NOW()),
+    (3, 'Payment Callback API', 'https://payment.example.com/callback/health', 'POST', 'Production', 'HTTP', 2, true, 'DOWN', 3, '{\"source\":\"seed\"}', 1, NOW() - INTERVAL '30 seconds', NOW() - INTERVAL '10 seconds', NOW(), NOW()),
+    (4, 'Redis TCP', 'tcp://redis.internal:6379', 'GET', 'Production', 'TCP', 2, true, 'UP', 4, NULL, 1, NOW() - INTERVAL '3 minutes', NOW() - INTERVAL '2 minutes', NOW(), NOW());
 
 INSERT INTO endpoint_headers (endpoint_id, header_key, header_value) VALUES
     (3, 'Content-Type', 'application/json'),
@@ -177,7 +167,8 @@ INSERT INTO endpoint_alert_rules (endpoint_id, alert_rule_id) VALUES
     (1, 1),
     (2, 1),
     (2, 2),
-    (3, 3);
+    (3, 3),
+    (3, 4);
 
 INSERT INTO endpoint_contact_groups (endpoint_id, contact_group_id) VALUES
     (1, 1),
@@ -203,9 +194,9 @@ INSERT INTO health_check_results (
     (1, 1, 1, NOW() - INTERVAL '12 minutes', 'UP', 200, 180, NULL, '{"status":"UP"}', 'local', true, NOW(), NOW()),
     (2, 1, 1, NOW() - INTERVAL '6 minutes', 'UP', 200, 205, NULL, '{"status":"UP"}', 'local', true, NOW(), NOW()),
     (3, 2, 1, NOW() - INTERVAL '10 minutes', 'UP', 200, 650, NULL, '{"status":"UP"}', 'local', true, NOW(), NOW()),
-    (4, 2, 1, NOW() - INTERVAL '4 minutes', 'DEGRADED', 200, 1800, 'High latency: 1800ms', '{"status":"UP"}', 'local', true, NOW(), NOW()),
+    (4, 2, 1, NOW() - INTERVAL '4 minutes', 'DOWN', 500, 1800, 'Status code mismatch. Expected: 200, Actual: 500', '{"status":"DOWN"}', 'local', false, NOW(), NOW()),
     (5, 3, 2, NOW() - INTERVAL '8 minutes', 'DOWN', 500, 320, 'Status code mismatch. Expected: 200, Actual: 500', '{"status":"ERROR"}', 'local', false, NOW(), NOW()),
-    (6, 3, 2, NOW() - INTERVAL '4 minutes', 'DOWN', 502, 410, 'Status code mismatch. Expected: 200, Actual: 502', '{"status":"BAD_GATEWAY"}', 'local', false, NOW(), NOW()),
+    (6, 3, 2, NOW() - INTERVAL '4 minutes', 'DEGRADED', 200, 980, 'High latency: 980ms', '{"status":"OK"}', 'local', true, NOW(), NOW()),
     (7, 3, 2, NOW() - INTERVAL '1 minute', 'DOWN', 503, 430, 'Status code mismatch. Expected: 200, Actual: 503', '{"status":"UNAVAILABLE"}', 'local', false, NOW(), NOW()),
     (8, 4, 2, NOW() - INTERVAL '5 minutes', 'UP', NULL, 45, NULL, NULL, 'local', true, NOW(), NOW());
 
@@ -223,12 +214,15 @@ INSERT INTO incidents (
     created_at,
     updated_at
 ) VALUES
-    (1, 3, 2, NOW() - INTERVAL '5 minutes', NULL, 'OPEN', 'Endpoint that bai lien tiep 3 lan (nguong: 2).', 3, 'WARNING', 'Demo incident do seed tao san de test dashboard.', NOW(), NOW());
+    (1, 3, 2, NOW() - INTERVAL '5 minutes', NULL, 'OPEN', 'Rule ''Payment Status Mismatch'' kích hoạt: status code 503 NE 200.', 1, 'CRITICAL', 'Demo incident do rule status code tao san de test dashboard.', NOW(), NOW());
 
 INSERT INTO incident_failing_results (incident_id, result_id) VALUES
     (1, 5),
     (1, 6),
     (1, 7);
+
+INSERT INTO incident_triggered_alert_rules (incident_id, alert_rule_id) VALUES
+    (1, 3);
 
 SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), true);
 SELECT setval(pg_get_serial_sequence('workspaces', 'id'), COALESCE((SELECT MAX(id) FROM workspaces), 1), true);

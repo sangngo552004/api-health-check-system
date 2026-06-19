@@ -9,4 +9,8 @@ public interface HealthCheckResultRepository {
   List<HealthCheckResult> findByEndpointId(Long endpointId);
 
   List<HealthCheckResult> findTop10ByEndpointIdOrderByCheckedAtDesc(Long endpointId);
+
+  List<HealthCheckResult> findByEndpointIdsOrderByCheckedAtDesc(List<Long> endpointIds);
+
+  List<HealthCheckResult> findAllByIds(List<Long> resultIds);
 }

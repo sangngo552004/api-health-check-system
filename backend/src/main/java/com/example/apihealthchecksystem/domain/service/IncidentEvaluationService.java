@@ -9,19 +9,7 @@ import java.util.List;
 public class IncidentEvaluationService {
 
   public boolean shouldOpenIncident(List<HealthCheckResult> recentResults, CheckPolicy policy) {
-    if (recentResults == null || recentResults.isEmpty()) {
-      return false;
-    }
-    int threshold = policy.getFailureThreshold() != null ? policy.getFailureThreshold() : 3;
-    if (recentResults.size() < threshold) {
-      return false;
-    }
-    long consecutiveFailures =
-        recentResults.stream()
-            .limit(threshold)
-            .filter(r -> !CheckStatus.UP.equals(r.getStatus()))
-            .count();
-    return consecutiveFailures >= threshold;
+    return false;
   }
 
   public boolean shouldResolveIncident(HealthCheckResult latestResult, Incident openIncident) {

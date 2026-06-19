@@ -37,7 +37,7 @@ export const WorkspaceSelectorPage: React.FC = () => {
           {loadingWorkspaces && <div>Đang tải workspaces...</div>}
           {!loadingWorkspaces && workspaces.length === 0 && (
             <div style={{ color: "var(--text-muted)" }}>
-              Bạn chưa được gán vào workspace nào. Hãy liên hệ SUPER_ADMIN.
+              Bạn chưa được gán vào workspace nào. Hãy liên hệ ADMIN.
             </div>
           )}
           {workspaces.map((workspace) => (

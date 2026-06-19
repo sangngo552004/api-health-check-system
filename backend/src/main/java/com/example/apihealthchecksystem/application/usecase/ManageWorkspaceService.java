@@ -61,6 +61,7 @@ public class ManageWorkspaceService implements ManageWorkspaceUseCase {
   @Override
   public List<WorkspaceDto> getMyWorkspaces(Long userId) {
     return workspaceRepository.findByUserId(userId).stream()
+        .filter(workspace -> Boolean.TRUE.equals(workspace.getIsActive()))
         .map(this::toDto)
         .collect(Collectors.toList());
   }

@@ -38,13 +38,13 @@ export const Sidebar: React.FC = () => {
       icon: <Globe size={20} />,
     },
     {
-      name: "Check Policies",
+      name: "Chính sách kiểm tra",
       path: "/app/policies",
       icon: <ShieldAlert size={20} />,
     },
-    { name: "Alert Rules", path: "/app/alerts", icon: <BellRing size={20} /> },
+    { name: "Quy tắc cảnh báo", path: "/app/alerts", icon: <BellRing size={20} /> },
     {
-      name: "Contact Groups",
+      name: "Nhóm liên hệ",
       path: "/app/contacts",
       icon: <Users size={20} />,
     },
@@ -110,7 +110,7 @@ export const Sidebar: React.FC = () => {
             letterSpacing: "0.05em",
           }}
         >
-          API MONITOR
+          MONITOR API
         </span>
       </div>
 
@@ -351,7 +351,11 @@ export const Sidebar: React.FC = () => {
               {user ? user.username : "Guest"}
             </span>
             <span style={{ fontSize: "0.725rem", color: "var(--text-muted)" }}>
-              {user ? user.role : "USER"}
+              {user?.role === "ADMIN"
+                ? "Quản trị"
+                : user?.role === "USER"
+                  ? "Viewer"
+                  : "Người dùng"}
             </span>
           </div>
         </div>

@@ -15,9 +15,9 @@ export const AdminSidebar: React.FC = () => {
   const location = useLocation();
 
   const menuItems = [
-    { name: "Users", path: "/admin/users", icon: <Users size={20} /> },
+    { name: "Người dùng", path: "/admin/users", icon: <Users size={20} /> },
     {
-      name: "Workspaces",
+      name: "Workspace",
       path: "/admin/workspaces",
       icon: <Briefcase size={20} />,
     },
@@ -70,40 +70,8 @@ export const AdminSidebar: React.FC = () => {
             color: "var(--text-primary)",
           }}
         >
-          ADMIN AREA
+          QUẢN TRỊ
         </span>
-      </div>
-
-      <div
-        style={{
-          padding: "20px 24px",
-          borderBottom: "1px solid var(--card-border)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "0.75rem",
-            textTransform: "uppercase",
-            color: "var(--text-muted)",
-          }}
-        >
-          System scope
-        </div>
-        <div
-          style={{
-            marginTop: "10px",
-            padding: "12px",
-            borderRadius: "10px",
-            background: "rgba(249, 115, 22, 0.1)",
-            border: "1px solid rgba(249, 115, 22, 0.2)",
-            color: "#fdba74",
-            fontSize: "0.9rem",
-            lineHeight: 1.5,
-          }}
-        >
-          Quản lý users, workspaces và membership. Không can thiệp vào tài
-          nguyên nghiệp vụ bên trong workspace.
-        </div>
       </div>
 
       <nav
@@ -183,7 +151,7 @@ export const AdminSidebar: React.FC = () => {
               {user?.username || "Admin"}
             </span>
             <span style={{ fontSize: "0.725rem", color: "var(--text-muted)" }}>
-              {user?.role || "SUPER_ADMIN"}
+              {user?.role === "ADMIN" ? "Quản trị" : "Người dùng"}
             </span>
           </div>
         </div>

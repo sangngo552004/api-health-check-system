@@ -28,6 +28,9 @@ public class Incident {
   /** Danh sách ID các lần check thất bại dẫn đến incident này. Giúp truy vết vết (Traceability). */
   private List<Long> failingResultIds;
 
+  /** Danh sách alert rule đã kích hoạt incident này. */
+  private List<Long> triggeredAlertRuleIds;
+
   public void resolve(LocalDateTime resolvedAt) {
     this.status = IncidentStatus.RESOLVED;
     this.resolvedAt = resolvedAt;

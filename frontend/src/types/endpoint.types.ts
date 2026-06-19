@@ -8,27 +8,34 @@ export interface EndpointDto {
   name: string;
   url: string;
   method: HttpMethod;
-  environment: Environment;
+  environment: Environment | string;
   checkType: CheckType;
+  workspaceId: number;
+  policyId: number;
+  expectedStatusCode?: number;
   isActive: boolean;
   status: EndpointStatus;
-  policyId?: number;
+  lastCheckedAt?: string;
   alertRuleIds: number[];
   tags: string[];
   headers: Record<string, string>;
   requestBody?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  intervalSeconds?: number;
+  timeoutMillis?: number;
+  retryCount?: number;
+  degradedResponseTimeMillis?: number;
+  nextRunAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface EndpointCreateCommand {
   name: string;
   url: string;
   method: HttpMethod;
-  environment: Environment;
+  environment?: Environment | string;
   checkType: CheckType;
-  isActive: boolean;
-  policyId?: number;
+  policyId: number;
   alertRuleIds: number[];
   tags: string[];
   headers: Record<string, string>;
@@ -37,4 +44,5 @@ export interface EndpointCreateCommand {
 
 export interface EndpointUpdateCommand extends EndpointCreateCommand {
   id: number;
+  isActive?: boolean;
 }

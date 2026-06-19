@@ -88,4 +88,7 @@ public class MonitoredEndpointJpaEntity extends BaseJpaEntity {
 
   @Column(name = "last_checked_at")
   private java.time.LocalDateTime lastCheckedAt;
+
+  @Column(name = "next_run_at")
+  private java.time.LocalDateTime nextRunAt;
 }

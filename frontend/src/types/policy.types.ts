@@ -4,8 +4,7 @@ export interface CheckPolicyDto {
   intervalSeconds: number;
   timeoutMillis: number;
   retryCount: number;
-  failureThreshold: number;
-  latencyThresholdMillis: number;
+  degradedResponseTimeMillis?: number;
   expectedStatusCode?: number;
   expectedResponseBody?: string;
   responseRegex?: string;
@@ -13,11 +12,10 @@ export interface CheckPolicyDto {
 
 export interface CheckPolicyCreateCommand {
   name: string;
-  intervalSeconds: number;
-  timeoutMillis: number;
-  retryCount: number;
-  failureThreshold: number;
-  latencyThresholdMillis: number;
+  intervalSeconds?: number;
+  timeoutMillis?: number;
+  retryCount?: number;
+  degradedResponseTimeMillis?: number;
   expectedStatusCode?: number;
   expectedResponseBody?: string;
   responseRegex?: string;

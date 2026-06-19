@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import * as z from "zod";
 import { workspacesApi } from "../../services/api/workspaces.api";
 import {
   AdminUserCreateCommand,
@@ -7,21 +8,29 @@ import {
   AdminUserUpdateCommand,
 } from "../../types/workspace.types";
 import { getErrorMessage } from "../../utils/error";
+import { useToast } from "../../context/useToast";
 import { PaginationBar } from "./components/adminUi";
 import { primaryButton } from "./components/adminStyles";
 import { UserFilters } from "./users/UserFilters";
 import { UserModal } from "./users/UserModal";
 import { emptyUserForm, UserFormState } from "./users/userPage.types";
 import { UsersTable } from "./users/UsersTable";
+import type { UserRoleFilter } from "./users/userPage.types";
+
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^(0\d{9}|\+84\d{9})$/, "Số điện thoại phải có dạng 0xxxxxxxxx hoặc +84xxxxxxxxx");
 
 export const AdminUsersPage: React.FC = () => {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState<"ALL" | "SUPER_ADMIN" | "USER">("ALL");
+  const [role, setRole] = useState<UserRoleFilter>("ALL");
   const [status, setStatus] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -32,6 +41,7 @@ export const AdminUsersPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyUserForm);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -60,9 +70,18 @@ export const AdminUsersPage: React.FC = () => {
     void loadUsers();
   }, [loadUsers]);
 
+  useEffect(() => {
+    if (!modalOpen) {
+      return;
+    }
+
+    setPhoneError(null);
+  }, [form.phoneNumber, modalOpen]);
+
   const openCreateModal = () => {
     setEditingUser(null);
     setForm(emptyUserForm);
+    setPhoneError(null);
     setModalOpen(true);
   };
 
@@ -75,8 +94,8 @@ export const AdminUsersPage: React.FC = () => {
       password: "",
       role: user.role,
       isActive: user.isActive ?? true,
-      requiresPasswordChange: false,
     });
+    setPhoneError(null);
     setModalOpen(true);
   };
 
@@ -87,10 +106,21 @@ export const AdminUsersPage: React.FC = () => {
     setModalOpen(false);
     setEditingUser(null);
     setForm(emptyUserForm);
+    setPhoneError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedPhoneNumber = form.phoneNumber.trim();
+    if (normalizedPhoneNumber) {
+      const parsedPhone = phoneSchema.safeParse(normalizedPhoneNumber);
+      if (!parsedPhone.success) {
+        setPhoneError(parsedPhone.error.issues[0]?.message ?? "Số điện thoại không hợp lệ");
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
       setError(null);
@@ -99,30 +129,46 @@ export const AdminUsersPage: React.FC = () => {
         const payload: AdminUserUpdateCommand = {
           username: form.username.trim(),
           email: form.email.trim() || undefined,
-          phoneNumber: form.phoneNumber.trim() || undefined,
+          phoneNumber: normalizedPhoneNumber || undefined,
           password: form.password.trim() || undefined,
           role: form.role,
           isActive: form.isActive,
-          requiresPasswordChange: form.requiresPasswordChange,
+          requiresPasswordChange: false,
         };
         await workspacesApi.updateAdminUser(editingUser.id, payload);
+        showToast({
+          title: "Cập nhật user thành công",
+          description: `User ${payload.username} đã được cập nhật.`,
+          variant: "success",
+        });
       } else {
         const payload: AdminUserCreateCommand = {
           username: form.username.trim(),
           email: form.email.trim() || undefined,
-          phoneNumber: form.phoneNumber.trim() || undefined,
+          phoneNumber: normalizedPhoneNumber || undefined,
           password: form.password,
           role: form.role,
           isActive: form.isActive,
-          requiresPasswordChange: form.requiresPasswordChange,
+          requiresPasswordChange: false,
         };
         await workspacesApi.createAdminUser(payload);
+        showToast({
+          title: "Tạo user thành công",
+          description: `User ${payload.username} đã được tạo.`,
+          variant: "success",
+        });
       }
 
       closeModal();
       await loadUsers();
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể lưu user"));
+      const message = getErrorMessage(err, "Không thể lưu user");
+      setError(message);
+      showToast({
+        title: "Lưu user thất bại",
+        description: message,
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -136,13 +182,24 @@ export const AdminUsersPage: React.FC = () => {
     try {
       setError(null);
       await workspacesApi.deleteAdminUser(user.id);
+      showToast({
+        title: "Xóa user thành công",
+        description: `User ${user.username} đã được xóa.`,
+        variant: "success",
+      });
       if (users.length === 1 && page > 0) {
         setPage((current) => current - 1);
       } else {
         await loadUsers();
       }
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể xóa user"));
+      const message = getErrorMessage(err, "Không thể xóa user");
+      setError(message);
+      showToast({
+        title: "Xóa user thất bại",
+        description: message,
+        variant: "error",
+      });
     }
   };
 
@@ -167,7 +224,7 @@ export const AdminUsersPage: React.FC = () => {
               color: "var(--text-primary)",
             }}
           >
-            Users
+            Người dùng
           </h1>
           <div style={{ color: "var(--text-muted)" }}>
             {loading ? "Đang tải..." : `${totalItems} user trong hệ thống`}
@@ -257,6 +314,7 @@ export const AdminUsersPage: React.FC = () => {
         <UserModal
           editingUser={editingUser}
           form={form}
+          phoneError={phoneError}
           submitting={submitting}
           onChange={setForm}
           onClose={closeModal}

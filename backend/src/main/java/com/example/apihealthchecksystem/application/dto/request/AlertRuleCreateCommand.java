@@ -2,6 +2,7 @@ package com.example.apihealthchecksystem.application.dto.request;
 
 import com.example.apihealthchecksystem.domain.valueobject.AlertRuleType;
 import com.example.apihealthchecksystem.domain.valueobject.ComparisonOperator;
+import com.example.apihealthchecksystem.domain.valueobject.IncidentSeverity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
 public record AlertRuleCreateCommand(
     @NotBlank String name,
     @NotNull AlertRuleType ruleType,
-    @NotNull ComparisonOperator operator,
+    ComparisonOperator operator,
     @NotNull Double thresholdValue,
-    List<Long> contactGroupIds,
-    Boolean overrideDefaultContacts) {}
+    @NotNull IncidentSeverity severity,
+    List<Long> contactGroupIds) {}

@@ -4,6 +4,7 @@ import com.example.apihealthchecksystem.application.mapper.AlertRuleDtoMapper;
 import com.example.apihealthchecksystem.application.mapper.CheckPolicyDtoMapper;
 import com.example.apihealthchecksystem.application.mapper.ContactGroupDtoMapper;
 import com.example.apihealthchecksystem.application.mapper.EndpointDtoMapper;
+import com.example.apihealthchecksystem.application.monitoring.MonitorEndpointBatchService;
 import com.example.apihealthchecksystem.application.port.in.AuthUseCase;
 import com.example.apihealthchecksystem.application.port.in.GetAdminDataUseCase;
 import com.example.apihealthchecksystem.application.port.in.GetIncidentUseCase;
@@ -12,8 +13,10 @@ import com.example.apihealthchecksystem.application.port.in.ManageAlertRuleUseCa
 import com.example.apihealthchecksystem.application.port.in.ManageCheckPolicyUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageContactGroupUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageEndpointUseCase;
+import com.example.apihealthchecksystem.application.port.in.ManageIncidentUseCase;
 import com.example.apihealthchecksystem.application.port.in.ManageWorkspaceUseCase;
 import com.example.apihealthchecksystem.application.port.in.MonitorEndpointUseCase;
+import com.example.apihealthchecksystem.application.port.in.RunEndpointHealthCheckUseCase;
 import com.example.apihealthchecksystem.application.port.out.AlertRuleRepository;
 import com.example.apihealthchecksystem.application.port.out.AuthenticationPort;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
@@ -32,8 +35,9 @@ import com.example.apihealthchecksystem.application.usecase.ManageAlertRuleServi
 import com.example.apihealthchecksystem.application.usecase.ManageCheckPolicyService;
 import com.example.apihealthchecksystem.application.usecase.ManageContactGroupService;
 import com.example.apihealthchecksystem.application.usecase.ManageEndpointService;
+import com.example.apihealthchecksystem.application.usecase.ManageIncidentService;
 import com.example.apihealthchecksystem.application.usecase.ManageWorkspaceService;
-import com.example.apihealthchecksystem.application.usecase.MonitorEndpointService;
+import com.example.apihealthchecksystem.application.usecase.MonitorEndpointWorkerService;
 import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -66,8 +70,10 @@ public class UseCaseConfig {
   public ManageEndpointUseCase manageEndpointUseCase(
       EndpointRepository endpointRepository,
       CheckPolicyRepository checkPolicyRepository,
+      AlertRuleRepository alertRuleRepository,
       EndpointDtoMapper mapper) {
-    return new ManageEndpointService(endpointRepository, checkPolicyRepository, mapper);
+    return new ManageEndpointService(
+        endpointRepository, checkPolicyRepository, alertRuleRepository, mapper);
   }
 
   @Bean
@@ -78,8 +84,10 @@ public class UseCaseConfig {
 
   @Bean
   public ManageAlertRuleUseCase manageAlertRuleUseCase(
-      AlertRuleRepository repository, AlertRuleDtoMapper mapper) {
-    return new ManageAlertRuleService(repository, mapper);
+      AlertRuleRepository repository,
+      ContactGroupRepository contactGroupRepository,
+      AlertRuleDtoMapper mapper) {
+    return new ManageAlertRuleService(repository, contactGroupRepository, mapper);
   }
 
   @Bean
@@ -97,14 +105,23 @@ public class UseCaseConfig {
   @Bean
   public MonitorEndpointUseCase monitorEndpointUseCase(
       EndpointRepository endpointRepository,
+      RunEndpointHealthCheckUseCase runEndpointHealthCheckUseCase) {
+    return new MonitorEndpointBatchService(endpointRepository, runEndpointHealthCheckUseCase);
+  }
+
+  @Bean
+  public RunEndpointHealthCheckUseCase runEndpointHealthCheckUseCase(
+      EndpointRepository endpointRepository,
       CheckPolicyRepository checkPolicyRepository,
+      AlertRuleRepository alertRuleRepository,
       List<HealthCheckExecutor> executors,
       HealthCheckResultRepository resultRepository,
       IncidentRepository incidentRepository,
       ApplicationEventPublisher eventPublisher) {
-    return new MonitorEndpointService(
+    return new MonitorEndpointWorkerService(
         endpointRepository,
         checkPolicyRepository,
+        alertRuleRepository,
         executors,
         resultRepository,
         incidentRepository,
@@ -126,7 +143,18 @@ public class UseCaseConfig {
   public GetIncidentUseCase getIncidentUseCase(
       WorkspaceRepository workspaceRepository,
       IncidentRepository incidentRepository,
-      EndpointRepository endpointRepository) {
-    return new GetIncidentService(workspaceRepository, incidentRepository, endpointRepository);
+      EndpointRepository endpointRepository,
+      HealthCheckResultRepository healthCheckResultRepository) {
+    return new GetIncidentService(
+        workspaceRepository,
+        incidentRepository,
+        endpointRepository,
+        healthCheckResultRepository);
+  }
+
+  @Bean
+  public ManageIncidentUseCase manageIncidentUseCase(
+      IncidentRepository incidentRepository, EndpointRepository endpointRepository) {
+    return new ManageIncidentService(incidentRepository, endpointRepository);
   }
 }

@@ -1,6 +1,6 @@
 import React from "react";
-import { X } from "lucide-react";
-import { CheckboxField, LabeledField } from "../components/adminUi";
+import { AlertCircle, X } from "lucide-react";
+import { LabeledField } from "../components/adminUi";
 import {
   closeButtonStyle,
   inputStyle,
@@ -10,11 +10,13 @@ import {
   secondaryButton,
   twoColumnGridStyle,
 } from "../components/adminStyles";
+import { formErrorStyle } from "../../shared/formStyles";
 import { UserModalProps } from "./userPage.types";
 
 export const UserModal: React.FC<UserModalProps> = ({
   editingUser,
   form,
+  phoneError,
   submitting,
   onChange,
   onClose,
@@ -38,7 +40,7 @@ export const UserModal: React.FC<UserModalProps> = ({
           style={{ display: "grid", gap: "16px" }}
         >
           <div style={twoColumnGridStyle}>
-            <LabeledField label="Username">
+            <LabeledField label="Tên đăng nhập">
               <input
                 value={form.username}
                 onChange={(e) =>
@@ -61,16 +63,29 @@ export const UserModal: React.FC<UserModalProps> = ({
           </div>
 
           <div style={twoColumnGridStyle}>
-            <LabeledField label="Phone number">
-              <input
-                value={form.phoneNumber}
-                onChange={(e) =>
-                  onChange((prev) => ({ ...prev, phoneNumber: e.target.value }))
-                }
-                style={inputStyle}
-              />
+            <LabeledField label="Số điện thoại">
+              <div>
+                <input
+                  value={form.phoneNumber}
+                  onChange={(e) =>
+                    onChange((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                  }
+                  style={{
+                    ...inputStyle,
+                    borderColor: phoneError
+                      ? "var(--error-color)"
+                      : "var(--card-border)",
+                  }}
+                />
+                {phoneError && (
+                  <div style={formErrorStyle}>
+                    <AlertCircle size={12} />
+                    {phoneError}
+                  </div>
+                )}
+              </div>
             </LabeledField>
-            <LabeledField label={isEdit ? "Password mới" : "Password"}>
+            <LabeledField label={isEdit ? "Mật khẩu mới" : "Mật khẩu"}>
               <input
                 type="password"
                 value={form.password}
@@ -85,19 +100,19 @@ export const UserModal: React.FC<UserModalProps> = ({
           </div>
 
           <div style={twoColumnGridStyle}>
-            <LabeledField label="Role">
+            <LabeledField label="Vai trò">
               <select
                 value={form.role}
                 onChange={(e) =>
                   onChange((prev) => ({
                     ...prev,
-                    role: e.target.value as "SUPER_ADMIN" | "USER",
+                    role: e.target.value as "ADMIN" | "USER",
                   }))
                 }
                 style={inputStyle}
               >
-                <option value="USER">USER</option>
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                <option value="USER">Viewer</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </LabeledField>
             <LabeledField label="Trạng thái">
@@ -111,23 +126,10 @@ export const UserModal: React.FC<UserModalProps> = ({
                 }
                 style={inputStyle}
               >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Đang hoạt động</option>
+                <option value="false">Ngưng hoạt động</option>
               </select>
             </LabeledField>
-          </div>
-
-          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-            <CheckboxField
-              label="Yêu cầu đổi mật khẩu"
-              checked={form.requiresPasswordChange}
-              onChange={(checked) =>
-                onChange((prev) => ({
-                  ...prev,
-                  requiresPasswordChange: checked,
-                }))
-              }
-            />
           </div>
 
           <div

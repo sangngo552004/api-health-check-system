@@ -3,6 +3,7 @@ package com.example.apihealthchecksystem.application.dto.request;
 import com.example.apihealthchecksystem.domain.valueobject.CheckType;
 import com.example.apihealthchecksystem.domain.valueobject.HttpMethod;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
@@ -15,6 +16,7 @@ public record EndpointCreateCommand(
     String environment,
     @NotNull CheckType checkType,
     @NotNull Long policyId,
+    @NotEmpty(message = "Phai chon it nhat mot alert rule")
     List<Long> alertRuleIds,
     List<String> tags,
     Map<String, String> headers,

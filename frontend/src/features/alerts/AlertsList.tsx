@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useToast } from "../../context/useToast";
 import { useAlertStore } from "../../store/useAlertStore";
 import {
   BellRing,
@@ -14,7 +15,7 @@ import {
   AlertRuleDto,
   AlertRuleUpdateCommand,
 } from "../../types/alert.types";
-import { AlertForm } from "./AlertForm";
+import { AlertForm, AlertFormData } from "./AlertForm";
 import { getErrorMessage } from "../../utils/error";
 
 export const AlertsList: React.FC = () => {
@@ -26,7 +27,12 @@ export const AlertsList: React.FC = () => {
     updateAlertRule,
     deleteAlertRule,
   } = useAlertStore();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [ruleTypeFilter, setRuleTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAlert, setEditingAlert] =
@@ -34,46 +40,103 @@ export const AlertsList: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchAlertRules(0, 100);
-  }, [fetchAlertRules]);
-
-  const filteredAlerts = alertRules.filter((a) =>
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+    void fetchAlertRules({
+      page: 0,
+      size: 100,
+      search: searchTerm.trim() || undefined,
+      ruleType: ruleTypeFilter || undefined,
+      isActive:
+        statusFilter === "" ? undefined : statusFilter === "true",
+      sortBy,
+      sortDir,
+    });
+  }, [fetchAlertRules, ruleTypeFilter, searchTerm, sortBy, sortDir, statusFilter]);
 
   const handleAdd = () => {
     setEditingAlert(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (a: AlertRuleDto) => {
+  const handleEdit = (rule: AlertRuleDto) => {
     setEditingAlert({
-      id: a.id,
-      name: a.name,
-      ruleType: a.ruleType,
-      operator: a.operator,
-      thresholdValue: a.thresholdValue,
-      isActive: a.isActive,
-      contactGroupIds: a.contactGroupIds,
-      overrideDefaultContacts: a.overrideDefaultContacts,
+      id: rule.id,
+      name: rule.name,
+      ruleType: rule.ruleType,
+      operator: rule.operator,
+      thresholdValue: rule.thresholdValue,
+      severity: rule.severity,
+      isActive: rule.isActive,
+      contactGroupIds: rule.contactGroupIds,
     });
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: AlertRuleCreateCommand) => {
+  const handleDelete = async (rule: AlertRuleDto) => {
+    if (!window.confirm("Bạn có chắc muốn xoá quy tắc cảnh báo này?")) {
+      return;
+    }
+
+    try {
+      await deleteAlertRule(rule.id);
+      showToast({
+        title: "Xóa quy tắc thành công",
+        description: `Quy tắc ${rule.name} đã được xóa.`,
+        variant: "success",
+      });
+    } catch (error) {
+      showToast({
+        title: "Xóa quy tắc thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
+    }
+  };
+
+  const handleFormSubmit = async (data: AlertFormData) => {
     setSubmitting(true);
     try {
       if (editingAlert) {
-        await updateAlertRule(editingAlert.id, {
-          ...data,
+        const payload: AlertRuleUpdateCommand = {
           id: editingAlert.id,
+          name: data.name,
+          ruleType: data.ruleType,
+          operator: data.operator ?? null,
+          thresholdValue: data.thresholdValue,
+          severity: data.severity,
+          isActive: data.isActive,
+          contactGroupIds: data.contactGroupIds,
+        };
+        await updateAlertRule(editingAlert.id, payload);
+        showToast({
+          title: "Cập nhật quy tắc thành công",
+          description: `Quy tắc ${data.name} đã được cập nhật.`,
+          variant: "success",
         });
       } else {
-        await createAlertRule(data);
+        const payload: AlertRuleCreateCommand = {
+          name: data.name,
+          ruleType: data.ruleType,
+          operator: data.operator ?? null,
+          thresholdValue: data.thresholdValue,
+          severity: data.severity,
+          contactGroupIds: data.contactGroupIds,
+        };
+        await createAlertRule(payload);
+        showToast({
+          title: "Tạo quy tắc thành công",
+          description: `Quy tắc ${data.name} đã được tạo.`,
+          variant: "success",
+        });
       }
       setIsFormOpen(false);
     } catch (error) {
-      alert("Có lỗi xảy ra: " + getErrorMessage(error));
+      showToast({
+        title: editingAlert
+          ? "Cập nhật quy tắc thất bại"
+          : "Tạo quy tắc thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -81,12 +144,12 @@ export const AlertsList: React.FC = () => {
 
   const getRuleTypeLabel = (type: string) => {
     switch (type) {
-      case "STATUS_CHANGE":
-        return "Status";
-      case "LATENCY_SPIKE":
-        return "Latency";
-      case "ERROR_RATE":
-        return "Error Rate";
+      case "CONSECUTIVE_FAILURE":
+        return "Thất bại liên tiếp";
+      case "RESPONSE_TIME":
+        return "Thời gian phản hồi";
+      case "HTTP_STATUS_CODE":
+        return "HTTP status code";
       default:
         return type;
     }
@@ -94,12 +157,18 @@ export const AlertsList: React.FC = () => {
 
   const getOperatorSymbol = (op: string) => {
     switch (op) {
-      case "GREATER_THAN":
+      case "GT":
         return ">";
-      case "LESS_THAN":
+      case "GTE":
+        return ">=";
+      case "LT":
         return "<";
-      case "EQUAL":
+      case "LTE":
+        return "<=";
+      case "EQ":
         return "=";
+      case "NE":
+        return "!=";
       default:
         return op;
     }
@@ -107,13 +176,14 @@ export const AlertsList: React.FC = () => {
 
   return (
     <div style={{ animation: "fadeIn 0.5s ease-out" }}>
-      {/* Header Section */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-end",
           marginBottom: "32px",
+          gap: "16px",
+          flexWrap: "wrap",
         }}
       >
         <div>
@@ -126,7 +196,7 @@ export const AlertsList: React.FC = () => {
               margin: "8px 0 0 0",
             }}
           >
-            Alert Rules
+            Quy tắc cảnh báo
           </h1>
         </div>
         <button
@@ -143,19 +213,13 @@ export const AlertsList: React.FC = () => {
             fontWeight: 600,
             cursor: "pointer",
             boxShadow: "0 4px 15px rgba(239, 68, 68, 0.3)",
-            transition: "all 0.2s",
           }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.transform = "translateY(-2px)")
-          }
-          onMouseOut={(e) => (e.currentTarget.style.transform = "none")}
         >
           <Plus size={18} />
-          Tạo Alert Rule
+          Tạo quy tắc
         </button>
       </div>
 
-      {/* Toolbar */}
       <div
         className="card"
         style={{
@@ -163,9 +227,10 @@ export const AlertsList: React.FC = () => {
           padding: "16px 24px",
           display: "flex",
           gap: "16px",
+          flexWrap: "wrap",
         }}
       >
-        <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
           <Search
             size={18}
             style={{
@@ -181,20 +246,47 @@ export const AlertsList: React.FC = () => {
             placeholder="Tìm kiếm quy tắc..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 16px 10px 42px",
-              background: "var(--bg-secondary)",
-              border: "1px solid var(--card-border)",
-              borderRadius: "10px",
-              color: "var(--text-primary)",
-              outline: "none",
-            }}
+            style={toolbarInputStyle}
           />
         </div>
+        <select
+          value={ruleTypeFilter}
+          onChange={(event) => setRuleTypeFilter(event.target.value)}
+          style={toolbarSelectStyle}
+        >
+          <option value="">Tất cả loại cảnh báo</option>
+          <option value="CONSECUTIVE_FAILURE">Thất bại liên tiếp</option>
+          <option value="RESPONSE_TIME">Thời gian phản hồi</option>
+          <option value="HTTP_STATUS_CODE">HTTP status code</option>
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          style={toolbarSelectStyle}
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="true">Đang bật</option>
+          <option value="false">Đang tắt</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+          style={toolbarSelectStyle}
+        >
+          <option value="createdAt">Mới tạo gần đây</option>
+          <option value="name">Tên quy tắc</option>
+          <option value="thresholdValue">Ngưỡng giá trị</option>
+        </select>
+        <select
+          value={sortDir}
+          onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+          style={toolbarSelectStyle}
+        >
+          <option value="desc">Giảm dần</option>
+          <option value="asc">Tăng dần</option>
+        </select>
       </div>
 
-      {/* Table */}
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <table
           style={{
@@ -210,60 +302,16 @@ export const AlertsList: React.FC = () => {
                 background: "var(--bg-secondary)",
               }}
             >
-              <th
-                style={{
-                  padding: "16px 24px",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                }}
-              >
-                Tên Cảnh báo
-              </th>
-              <th
-                style={{
-                  padding: "16px 24px",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                }}
-              >
-                Điều kiện
-              </th>
-              <th
-                style={{
-                  padding: "16px 24px",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                }}
-              >
-                Trạng thái
-              </th>
-              <th
-                style={{
-                  padding: "16px 24px",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  textAlign: "right",
-                }}
-              >
-                Thao tác
-              </th>
+              <th style={thStyle}>Quy tắc</th>
+              <th style={thStyle}>Điều kiện</th>
+              <th style={thStyle}>Trạng thái</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td
-                  colSpan={4}
-                  style={{
-                    padding: "40px",
-                    textAlign: "center",
-                    color: "var(--text-muted)",
-                  }}
-                >
+                <td colSpan={4} style={loadingCellStyle}>
                   <Activity
                     size={24}
                     className="spin"
@@ -272,29 +320,22 @@ export const AlertsList: React.FC = () => {
                   Đang tải danh sách...
                 </td>
               </tr>
-            ) : filteredAlerts.length === 0 ? (
+            ) : alertRules.length === 0 ? (
               <tr>
-                <td
-                  colSpan={4}
-                  style={{
-                    padding: "40px",
-                    textAlign: "center",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  Chưa có Alert Rule nào. Hãy tạo một cái!
+                <td colSpan={4} style={loadingCellStyle}>
+                  Chưa có quy tắc cảnh báo nào.
                 </td>
               </tr>
             ) : (
-              filteredAlerts.map((a) => (
+              alertRules.map((rule) => (
                 <tr
-                  key={a.id}
+                  key={rule.id}
                   style={{
                     borderBottom: "1px solid var(--card-border)",
                     transition: "background 0.2s",
                   }}
                 >
-                  <td style={{ padding: "16px 24px" }}>
+                  <td style={{ padding: "18px 24px" }}>
                     <div
                       style={{
                         display: "flex",
@@ -304,9 +345,9 @@ export const AlertsList: React.FC = () => {
                     >
                       <div
                         style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "10px",
+                          width: "42px",
+                          height: "42px",
+                          borderRadius: "12px",
                           background: "rgba(239, 68, 68, 0.1)",
                           color: "#ef4444",
                           display: "flex",
@@ -319,65 +360,77 @@ export const AlertsList: React.FC = () => {
                       <div>
                         <div
                           style={{
-                            fontWeight: 600,
+                            fontWeight: 700,
                             color: "var(--text-primary)",
                             marginBottom: "4px",
                           }}
                         >
-                          {a.name}
+                          {rule.name}
                         </div>
                         <div
                           style={{
-                            fontSize: "0.8rem",
+                            fontSize: "0.82rem",
                             color: "var(--text-muted)",
                           }}
                         >
-                          Groups:{" "}
-                          {a.contactGroupIds.length > 0
-                            ? a.contactGroupIds.join(", ")
-                            : "Mặc định"}
+                          {rule.contactGroupIds.length > 0
+                            ? `Gửi cho ${rule.contactGroupIds.length} nhóm liên hệ`
+                            : "Chưa cấu hình nhóm liên hệ"}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: "16px 24px" }}>
-                    <span
+                  <td style={{ padding: "18px 24px" }}>
+                    <div
                       style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "8px 10px",
+                        borderRadius: "10px",
                         fontSize: "0.85rem",
                         color: "var(--accent-color)",
                         background: "var(--accent-bg)",
-                        padding: "4px 8px",
-                        borderRadius: "6px",
                         fontWeight: 600,
                       }}
                     >
-                      {getRuleTypeLabel(a.ruleType)}{" "}
-                      {getOperatorSymbol(a.operator)} {a.thresholdValue}
-                    </span>
+                      {getRuleTypeLabel(rule.ruleType)}
+                      {rule.operator && <strong>{getOperatorSymbol(rule.operator)}</strong>}
+                      {rule.thresholdValue}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "0.8rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      Severity: <strong>{rule.severity}</strong>
+                    </div>
                   </td>
-                  <td style={{ padding: "16px 24px" }}>
+                  <td style={{ padding: "18px 24px" }}>
                     <span
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "4px",
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        color: a.isActive
+                        padding: "6px 10px",
+                        borderRadius: "999px",
+                        fontSize: "0.78rem",
+                        fontWeight: 700,
+                        color: rule.isActive
                           ? "var(--success-color)"
                           : "var(--text-muted)",
-                        background: a.isActive
-                          ? "rgba(16, 185, 129, 0.1)"
+                        background: rule.isActive
+                          ? "rgba(16, 185, 129, 0.12)"
                           : "var(--bg-secondary)",
                       }}
                     >
                       <Zap size={12} />
-                      {a.isActive ? "Bật" : "Tắt"}
+                      {rule.isActive ? "Đang bật" : "Đang tắt"}
                     </span>
                   </td>
-                  <td style={{ padding: "16px 24px", textAlign: "right" }}>
+                  <td style={{ padding: "18px 24px", textAlign: "right" }}>
                     <div
                       style={{
                         display: "flex",
@@ -386,35 +439,15 @@ export const AlertsList: React.FC = () => {
                       }}
                     >
                       <button
-                        onClick={() => handleEdit(a)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--accent-color)",
-                          cursor: "pointer",
-                          padding: "6px",
-                        }}
+                        onClick={() => handleEdit(rule)}
+                        style={iconButtonStyle("var(--accent-color)")}
                         title="Chỉnh sửa"
                       >
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Bạn có chắc muốn xoá Alert Rule này?",
-                            )
-                          ) {
-                            deleteAlertRule(a.id);
-                          }
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--error-color)",
-                          cursor: "pointer",
-                          padding: "6px",
-                        }}
+                        onClick={() => void handleDelete(rule)}
+                        style={iconButtonStyle("var(--error-color)")}
                         title="Xóa"
                       >
                         <Trash2 size={18} />
@@ -439,3 +472,43 @@ export const AlertsList: React.FC = () => {
     </div>
   );
 };
+
+const toolbarInputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 16px 10px 42px",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--card-border)",
+  borderRadius: "10px",
+  color: "var(--text-primary)",
+  outline: "none",
+};
+
+const toolbarSelectStyle: React.CSSProperties = {
+  minWidth: "180px",
+  padding: "10px 14px",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--card-border)",
+  borderRadius: "10px",
+  color: "var(--text-primary)",
+};
+
+const thStyle: React.CSSProperties = {
+  padding: "16px 24px",
+  color: "var(--text-muted)",
+  fontWeight: 600,
+  fontSize: "0.85rem",
+};
+
+const loadingCellStyle: React.CSSProperties = {
+  padding: "40px",
+  textAlign: "center",
+  color: "var(--text-muted)",
+};
+
+const iconButtonStyle = (color: string): React.CSSProperties => ({
+  background: "none",
+  border: "none",
+  color,
+  cursor: "pointer",
+  padding: "6px",
+});

@@ -1,3 +1,4 @@
+import type { AppRole } from "../../../context/auth-context";
 import { AdminUserDto } from "../../../types/workspace.types";
 
 export type UserFormState = {
@@ -5,9 +6,8 @@ export type UserFormState = {
   email: string;
   phoneNumber: string;
   password: string;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
   isActive: boolean;
-  requiresPasswordChange: boolean;
 };
 
 export const emptyUserForm: UserFormState = {
@@ -17,15 +17,15 @@ export const emptyUserForm: UserFormState = {
   password: "",
   role: "USER",
   isActive: true,
-  requiresPasswordChange: false,
 };
 
-export type UserRoleFilter = "ALL" | "SUPER_ADMIN" | "USER";
+export type UserRoleFilter = "ALL" | AppRole;
 export type UserStatusFilter = "ALL" | "ACTIVE" | "INACTIVE";
 
 export type UserModalProps = {
   editingUser: AdminUserDto | null;
   form: UserFormState;
+  phoneError: string | null;
   submitting: boolean;
   onChange: React.Dispatch<React.SetStateAction<UserFormState>>;
   onClose: () => void;

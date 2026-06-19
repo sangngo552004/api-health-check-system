@@ -10,7 +10,7 @@ import {
 interface JwtPayload {
   sub: string;
   username?: string;
-  role?: "SUPER_ADMIN" | "USER";
+  role?: "ADMIN" | "USER";
 }
 
 // Helper decode JWT
@@ -89,9 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const payload = decodeJwt(response.accessToken);
     if (payload) {
       setUser({
-        id: parseInt(payload.sub, 10),
-        username: payload.username || "User",
-        role: payload.role || "USER",
+          id: parseInt(payload.sub, 10),
+          username: payload.username || "User",
+          role: payload.role || "USER",
       });
     }
     return response;

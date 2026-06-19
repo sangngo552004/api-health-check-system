@@ -31,7 +31,7 @@ export const Login: React.FC = () => {
     try {
       const response = await login({ username, password });
       navigate(
-        response.role === "SUPER_ADMIN" ? "/admin/users" : "/select-workspace",
+        response.role === "ADMIN" ? "/admin/users" : "/select-workspace",
       );
     } catch (error) {
       setError(

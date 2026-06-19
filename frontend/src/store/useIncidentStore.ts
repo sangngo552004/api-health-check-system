@@ -18,6 +18,7 @@ interface IncidentState {
   };
   fetchIncidents: (page?: number, size?: number) => Promise<void>;
   fetchIncidentById: (id: number) => Promise<void>;
+  replaceIncident: (incident: IncidentDto) => void;
   setFilters: (filters: {
     status: IncidentStatus | "";
     endpointId?: number;
@@ -73,6 +74,17 @@ export const useIncidentStore = create<IncidentState>((set, get) => ({
       });
     }
   },
+
+  replaceIncident: (incident) =>
+    set((state) => ({
+      selectedIncident:
+        state.selectedIncident?.id === incident.id
+          ? incident
+          : state.selectedIncident,
+      incidents: state.incidents.map((item) =>
+        item.id === incident.id ? { ...item, ...incident } : item,
+      ),
+    })),
 
   setFilters: (filters) => set({ filters, currentPage: 0 }),
 

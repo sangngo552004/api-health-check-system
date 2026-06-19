@@ -32,7 +32,7 @@ public class ContactGroupController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> create(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @Valid @RequestBody ContactGroupCreateCommand command) {
@@ -41,17 +41,23 @@ public class ContactGroupController {
 
   @GetMapping
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<ContactGroupDto>> getByWorkspace(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) Boolean isActive,
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.success(useCase.getContactGroupsByWorkspace(workspaceId, page, size));
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDir) {
+    return ApiResponse.success(
+        useCase.getContactGroupsByWorkspace(
+            workspaceId, search, isActive, page, size, sortBy, sortDir));
   }
 
   @GetMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> getById(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(useCase.getContactGroup(workspaceId, id));
@@ -59,7 +65,7 @@ public class ContactGroupController {
 
   @PutMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<ContactGroupDto> update(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -70,16 +76,14 @@ public class ContactGroupController {
             command.name(),
             command.description(),
             command.isActive(),
-            command.userIds(),
-            command.emailAddresses(),
-            command.webhookUrls());
+            command.emailAddresses());
     return ApiResponse.success(useCase.updateContactGroup(workspaceId, withId));
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public void delete(@RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     useCase.deleteContactGroup(workspaceId, id);
   }

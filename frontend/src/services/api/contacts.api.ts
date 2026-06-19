@@ -6,10 +6,19 @@ import {
 } from "../../types/contact.types";
 import { PagedResponseDto } from "../../types/common.types";
 
+export interface ContactGroupListParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
 export const contactsApi = {
-  getContactGroups: (page = 0, size = 10) => {
+  getContactGroups: (params?: ContactGroupListParams) => {
     return api.get<PagedResponseDto<ContactGroupDto>>("/contact-groups", {
-      params: { page, size },
+      params: params as Record<string, string | number | boolean | undefined>,
     });
   },
 

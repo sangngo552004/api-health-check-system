@@ -7,9 +7,12 @@ import com.example.apihealthchecksystem.application.dto.request.AdminWorkspaceUp
 import com.example.apihealthchecksystem.application.dto.response.AdminUserDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
+import com.example.apihealthchecksystem.application.dto.response.WorkspaceMemberDto;
 import com.example.apihealthchecksystem.application.port.in.ManageAdminUseCase;
 import com.example.apihealthchecksystem.delivery.rest.common.ApiResponse;
+import com.example.apihealthchecksystem.delivery.rest.common.security.CurrentUserId;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
   private final ManageAdminUseCase adminUseCase;
 
@@ -88,8 +91,8 @@ public class AdminController {
   @PostMapping("/workspaces")
   @ResponseStatus(HttpStatus.CREATED)
   public ApiResponse<WorkspaceDto> createWorkspace(
-      @Valid @RequestBody AdminWorkspaceCreateCommand command) {
-    return ApiResponse.success(adminUseCase.createWorkspace(command));
+      @Valid @RequestBody AdminWorkspaceCreateCommand command, @CurrentUserId Long currentUserId) {
+    return ApiResponse.success(adminUseCase.createWorkspace(command, currentUserId));
   }
 
   @PutMapping("/workspaces/{id}")
@@ -102,5 +105,22 @@ public class AdminController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteWorkspace(@PathVariable Long id) {
     adminUseCase.deleteWorkspace(id);
+  }
+
+  @PostMapping("/workspaces/{id}/members")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void addWorkspaceMember(@PathVariable Long id, @RequestParam Long userId) {
+    adminUseCase.addWorkspaceMember(id, userId);
+  }
+
+  @DeleteMapping("/workspaces/{id}/members/{userId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void removeWorkspaceMember(@PathVariable Long id, @PathVariable Long userId) {
+    adminUseCase.removeWorkspaceMember(id, userId);
+  }
+
+  @GetMapping("/workspaces/{id}/members")
+  public ApiResponse<List<WorkspaceMemberDto>> getWorkspaceMembers(@PathVariable Long id) {
+    return ApiResponse.success(adminUseCase.getWorkspaceMembers(id));
   }
 }

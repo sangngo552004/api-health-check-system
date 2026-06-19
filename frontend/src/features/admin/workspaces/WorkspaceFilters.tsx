@@ -11,17 +11,14 @@ const workspaceSortOptions = [
   { value: "createdAt", label: "Mới nhất" },
   { value: "name", label: "Tên workspace" },
   { value: "slug", label: "Slug" },
-  { value: "ownerId", label: "Owner ID" },
 ];
 
 export const WorkspaceFilters: React.FC<{
   searchInput: string;
-  ownerIdFilter: string;
   status: WorkspaceStatusFilter;
   sortBy: string;
   sortDir: "asc" | "desc";
   onSearchInputChange: (value: string) => void;
-  onOwnerIdFilterChange: (value: string) => void;
   onStatusChange: (value: WorkspaceStatusFilter) => void;
   onSortByChange: (value: string) => void;
   onSortDirChange: (value: "asc" | "desc") => void;
@@ -29,12 +26,10 @@ export const WorkspaceFilters: React.FC<{
   onReset: () => void;
 }> = ({
   searchInput,
-  ownerIdFilter,
   status,
   sortBy,
   sortDir,
   onSearchInputChange,
-  onOwnerIdFilterChange,
   onStatusChange,
   onSortByChange,
   onSortDirChange,
@@ -53,7 +48,7 @@ export const WorkspaceFilters: React.FC<{
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(240px, 2fr) repeat(5, minmax(120px, 1fr))",
+        gridTemplateColumns: "minmax(260px, 2fr) repeat(4, minmax(120px, 1fr))",
         gap: "12px",
       }}
     >
@@ -77,16 +72,10 @@ export const WorkspaceFilters: React.FC<{
               onApply();
             }
           }}
-          placeholder="Tìm theo name, slug, description"
+          placeholder="Tìm theo tên, slug hoặc mô tả"
           style={{ ...inputStyle, paddingLeft: "36px" }}
         />
       </div>
-      <input
-        value={ownerIdFilter}
-        onChange={(e) => onOwnerIdFilterChange(e.target.value)}
-        placeholder="Owner ID"
-        style={inputStyle}
-      />
       <select
         value={status}
         onChange={(e) =>
@@ -95,8 +84,8 @@ export const WorkspaceFilters: React.FC<{
         style={inputStyle}
       >
         <option value="ALL">Tất cả trạng thái</option>
-        <option value="ACTIVE">Active</option>
-        <option value="INACTIVE">Inactive</option>
+        <option value="ACTIVE">Đang hoạt động</option>
+        <option value="INACTIVE">Ngưng hoạt động</option>
       </select>
       <select
         value={sortBy}

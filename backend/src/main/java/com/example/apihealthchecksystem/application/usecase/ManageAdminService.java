@@ -7,15 +7,21 @@ import com.example.apihealthchecksystem.application.dto.request.AdminWorkspaceUp
 import com.example.apihealthchecksystem.application.dto.response.AdminUserDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
+import com.example.apihealthchecksystem.application.dto.response.WorkspaceMemberDto;
 import com.example.apihealthchecksystem.application.exception.AppErrorCode;
-import com.example.apihealthchecksystem.application.exception.AppException;
+import com.example.apihealthchecksystem.application.exception.BusinessRuleViolationException;
 import com.example.apihealthchecksystem.application.exception.ResourceNotFoundException;
+import com.example.apihealthchecksystem.application.exception.ValidationException;
 import com.example.apihealthchecksystem.application.port.in.ManageAdminUseCase;
 import com.example.apihealthchecksystem.application.port.out.UserRepository;
 import com.example.apihealthchecksystem.application.port.out.WorkspaceRepository;
 import com.example.apihealthchecksystem.domain.model.User;
 import com.example.apihealthchecksystem.domain.model.Workspace;
+import com.example.apihealthchecksystem.domain.model.WorkspaceMember;
 import com.example.apihealthchecksystem.domain.valueobject.UserRole;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -103,9 +109,7 @@ public class ManageAdminService implements ManageAdminUseCase {
   public void deleteUser(Long id) {
     getUser(id);
     if (workspaceRepository.existsByOwnerId(id)) {
-      throw new AppException(
-          AppErrorCode.VALIDATION_ERROR,
-          "Không thể xóa user đang được gán làm owner của workspace.");
+      throw new BusinessRuleViolationException(AppErrorCode.USER_IS_WORKSPACE_OWNER);
     }
     userRepository.deleteById(id);
   }
@@ -136,38 +140,35 @@ public class ManageAdminService implements ManageAdminUseCase {
   }
 
   @Override
-  public WorkspaceDto createWorkspace(AdminWorkspaceCreateCommand command) {
-    validateUniqueSlug(command.slug(), null);
-    getUser(command.ownerId());
+  public WorkspaceDto createWorkspace(AdminWorkspaceCreateCommand command, Long currentUserId) {
+    String normalizedSlug = normalizeSlug(command.slug());
+    validateUniqueSlug(normalizedSlug, null);
+    getUser(currentUserId);
 
     Workspace saved =
         workspaceRepository.save(
             Workspace.builder()
                 .name(command.name().trim())
                 .description(normalizeNullable(command.description()))
-                .slug(command.slug().trim())
-                .ownerId(command.ownerId())
+                .slug(normalizedSlug)
+                .ownerId(currentUserId)
                 .isActive(command.isActive() != null ? command.isActive() : Boolean.TRUE)
                 .build());
-    workspaceRepository.addMember(saved.getId(), command.ownerId());
     return toWorkspaceDto(saved);
   }
 
   @Override
   public WorkspaceDto updateWorkspace(Long id, AdminWorkspaceUpdateCommand command) {
     Workspace existing = getWorkspace(id);
-    validateUniqueSlug(command.slug(), id);
-    getUser(command.ownerId());
+    String normalizedSlug = normalizeSlug(command.slug());
+    validateUniqueSlug(normalizedSlug, id);
 
     existing.setName(command.name().trim());
     existing.setDescription(normalizeNullable(command.description()));
-    existing.setSlug(command.slug().trim());
-    existing.setOwnerId(command.ownerId());
+    existing.setSlug(normalizedSlug);
     existing.setIsActive(command.isActive() != null ? command.isActive() : existing.getIsActive());
 
-    Workspace saved = workspaceRepository.save(existing);
-    workspaceRepository.addMember(saved.getId(), command.ownerId());
-    return toWorkspaceDto(saved);
+    return toWorkspaceDto(workspaceRepository.save(existing));
   }
 
   @Override
@@ -176,14 +177,53 @@ public class ManageAdminService implements ManageAdminUseCase {
     try {
       workspaceRepository.deleteById(id);
     } catch (DataIntegrityViolationException ex) {
-      throw new AppException(
-          AppErrorCode.VALIDATION_ERROR,
-          "Không thể xóa workspace khi vẫn còn dữ liệu nghiệp vụ phụ thuộc bên trong.");
+      throw new BusinessRuleViolationException(AppErrorCode.WORKSPACE_HAS_DEPENDENT_DATA);
     }
   }
 
+  @Override
+  public void addWorkspaceMember(Long workspaceId, Long userId) {
+    getWorkspace(workspaceId);
+    User user = getUser(userId);
+    if (user.getRole() == UserRole.ADMIN) {
+      throw new BusinessRuleViolationException(AppErrorCode.ADMIN_CANNOT_JOIN_WORKSPACE);
+    }
+    workspaceRepository.addMember(workspaceId, userId);
+  }
+
+  @Override
+  public void removeWorkspaceMember(Long workspaceId, Long userId) {
+    getWorkspace(workspaceId);
+    getUser(userId);
+    workspaceRepository.removeMember(workspaceId, userId);
+  }
+
+  @Override
+  public List<WorkspaceMemberDto> getWorkspaceMembers(Long workspaceId) {
+    getWorkspace(workspaceId);
+    var members = workspaceRepository.getMembers(workspaceId);
+    var userIds = members.stream().map(WorkspaceMember::getUserId).toList();
+    Map<Long, User> userMap =
+        userRepository.findAllByIds(userIds).stream()
+            .collect(Collectors.toMap(User::getId, user -> user));
+
+    return members.stream()
+        .map(
+            member -> {
+              User user = userMap.get(member.getUserId());
+              return new WorkspaceMemberDto(
+                  member.getUserId(),
+                  user != null ? user.getUsername() : "Unknown",
+                  user != null ? user.getEmail() : "Unknown",
+                  member.getJoinedAt());
+            })
+        .toList();
+  }
+
   private User getUser(Long id) {
-    return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("user", id));
+    return userRepository
+        .findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException(AppErrorCode.USER_NOT_FOUND, id));
   }
 
   private Workspace getWorkspace(Long id) {
@@ -198,8 +238,7 @@ public class ManageAdminService implements ManageAdminUseCase {
         .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
         .ifPresent(
             user -> {
-              throw new AppException(
-                  AppErrorCode.VALIDATION_ERROR, "Username đã tồn tại trong hệ thống.");
+              throw new ValidationException(AppErrorCode.USERNAME_ALREADY_EXISTS);
             });
   }
 
@@ -213,21 +252,19 @@ public class ManageAdminService implements ManageAdminUseCase {
         .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
         .ifPresent(
             user -> {
-              throw new AppException(
-                  AppErrorCode.VALIDATION_ERROR, "Email đã tồn tại trong hệ thống.");
+              throw new ValidationException(AppErrorCode.EMAIL_ALREADY_EXISTS);
             });
   }
 
   private void validateUniqueSlug(String slug, Long currentWorkspaceId) {
     workspaceRepository
-        .findBySlug(slug.trim())
+        .findBySlug(normalizeSlug(slug))
         .filter(
             workspace ->
                 currentWorkspaceId == null || !workspace.getId().equals(currentWorkspaceId))
         .ifPresent(
             workspace -> {
-              throw new AppException(
-                  AppErrorCode.VALIDATION_ERROR, "Slug workspace đã tồn tại trong hệ thống.");
+              throw new ValidationException(AppErrorCode.WORKSPACE_SLUG_ALREADY_EXISTS);
             });
   }
 
@@ -267,6 +304,22 @@ public class ManageAdminService implements ManageAdminUseCase {
     return trimmed.isEmpty() ? null : trimmed;
   }
 
+  private String normalizeSlug(String slug) {
+    if (slug == null) {
+      return null;
+    }
+    String normalized =
+        slug
+            .trim()
+            .toLowerCase()
+            .replaceAll("[^a-z0-9]+", "-")
+            .replaceAll("^-+|-+$", "");
+    if (normalized.isEmpty()) {
+      throw new ValidationException(AppErrorCode.VALIDATION_ERROR);
+    }
+    return normalized;
+  }
+
   private UserRole parseUserRole(String role) {
     String normalizedRole = normalizeNullable(role);
     if (normalizedRole == null) {
@@ -275,8 +328,7 @@ public class ManageAdminService implements ManageAdminUseCase {
     try {
       return UserRole.valueOf(normalizedRole.toUpperCase());
     } catch (IllegalArgumentException ex) {
-      throw new AppException(
-          AppErrorCode.VALIDATION_ERROR, "Role không hợp lệ. Chỉ hỗ trợ SUPER_ADMIN hoặc USER.");
+      throw new ValidationException(AppErrorCode.INVALID_ROLE);
     }
   }
 }

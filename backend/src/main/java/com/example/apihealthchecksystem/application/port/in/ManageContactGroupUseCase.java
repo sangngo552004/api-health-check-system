@@ -13,7 +13,13 @@ public interface ManageContactGroupUseCase {
   ContactGroupDto getContactGroup(Long workspaceId, Long id);
 
   PagedResponseDto<ContactGroupDto> getContactGroupsByWorkspace(
-      Long workspaceId, int page, int size);
+      Long workspaceId,
+      String search,
+      Boolean isActive,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir);
 
   void deleteContactGroup(Long workspaceId, Long id);
 }

@@ -3,16 +3,12 @@ import { WorkspaceDto } from "../../../types/workspace.types";
 export type WorkspaceFormState = {
   name: string;
   description: string;
-  slug: string;
-  ownerId: string;
   isActive: boolean;
 };
 
 export const emptyWorkspaceForm: WorkspaceFormState = {
   name: "",
   description: "",
-  slug: "",
-  ownerId: "",
   isActive: true,
 };
 

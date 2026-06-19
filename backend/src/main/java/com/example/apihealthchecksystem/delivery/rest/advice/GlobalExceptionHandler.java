@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -24,7 +25,7 @@ public class GlobalExceptionHandler {
       ResourceNotFoundException ex) {
     log.warn("Resource not found: {}", ex.getMessage());
     AppErrorCode errorCode = ex.getErrorCode();
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    return ResponseEntity.status(errorCode.getHttpStatus())
         .body(ApiResponse.error(errorCode.getCode(), ex.getMessage()));
   }
 
@@ -32,7 +33,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
     log.warn("Application exception occurred: {}", ex.getMessage());
     AppErrorCode errorCode = ex.getErrorCode();
-    return ResponseEntity.status(resolveHttpStatus(errorCode))
+    return ResponseEntity.status(errorCode.getHttpStatus())
         .body(ApiResponse.error(errorCode.getCode(), ex.getMessage()));
   }
 
@@ -40,9 +41,11 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse<Object>> handleBadCredentialsException(
       BadCredentialsException ex) {
     log.warn("Authentication failed: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+    return ResponseEntity.status(AppErrorCode.INVALID_CREDENTIALS.getHttpStatus())
         .body(
-            ApiResponse.error(AppErrorCode.UNAUTHORIZED.getCode(), "Sai tai khoan hoac mat khau"));
+            ApiResponse.error(
+                AppErrorCode.INVALID_CREDENTIALS.getCode(),
+                AppErrorCode.INVALID_CREDENTIALS.getMessage()));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -66,6 +69,16 @@ public class GlobalExceptionHandler {
                 errors));
   }
 
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiResponse<Object>> handleMethodArgumentTypeMismatchException(
+      MethodArgumentTypeMismatchException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            ApiResponse.error(
+                AppErrorCode.VALIDATION_ERROR.getCode(),
+                String.format("Giá trị không hợp lệ cho tham số '%s'", ex.getName())));
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
     log.error("Unexpected exception occurred", ex);
@@ -74,21 +87,5 @@ public class GlobalExceptionHandler {
             ApiResponse.error(
                 AppErrorCode.INTERNAL_SERVER_ERROR.getCode(),
                 AppErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
-  }
-
-  private HttpStatus resolveHttpStatus(AppErrorCode errorCode) {
-    return switch (errorCode) {
-      case ACCESS_DENIED, WORKSPACE_RESOURCE_ACCESS_DENIED -> HttpStatus.FORBIDDEN;
-      case UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
-      case RESOURCE_NOT_FOUND,
-              ENDPOINT_NOT_FOUND,
-              CHECK_POLICY_NOT_FOUND,
-              ALERT_RULE_NOT_FOUND,
-              CONTACT_GROUP_NOT_FOUND,
-              WORKSPACE_NOT_FOUND ->
-          HttpStatus.NOT_FOUND;
-      case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
-      default -> HttpStatus.BAD_REQUEST;
-    };
   }
 }

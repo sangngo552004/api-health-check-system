@@ -11,6 +11,7 @@ import {
   twoColumnGridStyle,
 } from "../components/adminStyles";
 import { WorkspaceModalProps } from "./workspacePage.types";
+import { generateWorkspaceSlug } from "./workspaceSlug";
 
 export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
   editingWorkspace,
@@ -21,6 +22,7 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
   onSubmit,
 }) => {
   const isEdit = Boolean(editingWorkspace);
+  const generatedSlug = generateWorkspaceSlug(form.name);
 
   return (
     <div style={overlayStyle}>
@@ -52,30 +54,6 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 required
               />
             </LabeledField>
-            <LabeledField label="Slug">
-              <input
-                value={form.slug}
-                onChange={(e) =>
-                  onChange((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                style={inputStyle}
-                required
-              />
-            </LabeledField>
-          </div>
-
-          <div style={twoColumnGridStyle}>
-            <LabeledField label="Owner ID">
-              <input
-                type="number"
-                value={form.ownerId}
-                onChange={(e) =>
-                  onChange((prev) => ({ ...prev, ownerId: e.target.value }))
-                }
-                style={inputStyle}
-                required
-              />
-            </LabeledField>
             <LabeledField label="Trạng thái">
               <select
                 value={String(form.isActive)}
@@ -87,11 +65,26 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 }
                 style={inputStyle}
               >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Đang hoạt động</option>
+                <option value="false">Ngưng hoạt động</option>
               </select>
             </LabeledField>
           </div>
+
+          <LabeledField label="Slug sẽ được tạo tự động từ tên workspace">
+            <div
+              style={{
+                ...inputStyle,
+                minHeight: "46px",
+                display: "flex",
+                alignItems: "center",
+                color: "var(--text-secondary)",
+                background: "var(--bg-primary)",
+              }}
+            >
+              {generatedSlug}
+            </div>
+          </LabeledField>
 
           <LabeledField label="Mô tả">
             <textarea

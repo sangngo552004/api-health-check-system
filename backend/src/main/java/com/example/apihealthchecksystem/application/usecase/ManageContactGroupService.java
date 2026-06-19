@@ -10,6 +10,7 @@ import com.example.apihealthchecksystem.application.exception.ResourceNotFoundEx
 import com.example.apihealthchecksystem.application.mapper.ContactGroupDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageContactGroupUseCase;
 import com.example.apihealthchecksystem.application.port.out.ContactGroupRepository;
+import com.example.apihealthchecksystem.application.support.PagingUtils;
 import com.example.apihealthchecksystem.domain.model.ContactGroup;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,9 +36,7 @@ public class ManageContactGroupService implements ManageContactGroupUseCase {
 
     existing.setName(command.name());
     existing.setDescription(command.description());
-    existing.setUserIds(command.userIds());
     existing.setEmailAddresses(command.emailAddresses());
-    existing.setWebhookUrls(command.webhookUrls());
     if (command.isActive() != null) {
       existing.setIsActive(command.isActive());
     }
@@ -55,13 +54,23 @@ public class ManageContactGroupService implements ManageContactGroupUseCase {
 
   @Override
   public PagedResponseDto<ContactGroupDto> getContactGroupsByWorkspace(
-      Long workspaceId, int page, int size) {
-    List<ContactGroup> groups = repository.findByWorkspaceId(workspaceId, page, size);
-    long total = repository.countByWorkspaceId(workspaceId);
+      Long workspaceId,
+      String search,
+      Boolean isActive,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir) {
+    int safePage = PagingUtils.normalizePage(page);
+    int safeSize = PagingUtils.normalizeSize(size);
+    var result =
+        repository.searchByWorkspace(
+            workspaceId, search, isActive, safePage, safeSize, sortBy, sortDir);
 
-    List<ContactGroupDto> dtos = groups.stream().map(mapper::toDto).collect(Collectors.toList());
+    List<ContactGroupDto> dtos =
+        result.items().stream().map(mapper::toDto).collect(Collectors.toList());
 
-    return PagedResponseDto.of(dtos, page, size, total);
+    return PagedResponseDto.of(dtos, safePage, safeSize, result.totalItems());
   }
 
   @Override

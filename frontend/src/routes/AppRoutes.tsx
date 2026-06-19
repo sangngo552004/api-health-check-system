@@ -46,7 +46,7 @@ export const AppRoutes: React.FC = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const homeRedirect =
-    user?.role === "SUPER_ADMIN"
+    user?.role === "ADMIN"
       ? "/admin/users"
       : activeWorkspace
         ? "/app"
@@ -80,7 +80,7 @@ export const AppRoutes: React.FC = () => {
         path="/admin"
         element={
           <PrivateRoute>
-            {user?.role === "SUPER_ADMIN" ? (
+            {user?.role === "ADMIN" ? (
               <AdminLayout />
             ) : (
               <Navigate to={homeRedirect} replace />

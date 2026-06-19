@@ -87,7 +87,7 @@ export const UserFilters: React.FC<{
         style={inputStyle}
       >
         <option value="ALL">Tất cả role</option>
-        <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+        <option value="ADMIN">ADMIN</option>
         <option value="USER">USER</option>
       </select>
       <select

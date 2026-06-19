@@ -10,6 +10,7 @@ import com.example.apihealthchecksystem.application.exception.ResourceNotFoundEx
 import com.example.apihealthchecksystem.application.mapper.CheckPolicyDtoMapper;
 import com.example.apihealthchecksystem.application.port.in.ManageCheckPolicyUseCase;
 import com.example.apihealthchecksystem.application.port.out.CheckPolicyRepository;
+import com.example.apihealthchecksystem.application.support.PagingUtils;
 import com.example.apihealthchecksystem.domain.model.CheckPolicy;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
   @Override
   public CheckPolicyDto createPolicy(Long workspaceId, CheckPolicyCreateCommand command) {
     CheckPolicy policy = mapper.toDomain(command);
+    applyDefaults(policy);
     policy.setWorkspaceId(workspaceId);
     return mapper.toDto(repository.save(policy));
   }
@@ -37,11 +39,11 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
     existing.setIntervalSeconds(command.intervalSeconds());
     existing.setTimeoutMillis(command.timeoutMillis());
     existing.setRetryCount(command.retryCount());
-    existing.setFailureThreshold(command.failureThreshold());
-    existing.setLatencyThresholdMillis(command.latencyThresholdMillis());
+    existing.setDegradedResponseTimeMillis(command.degradedResponseTimeMillis());
     existing.setExpectedStatusCode(command.expectedStatusCode());
     existing.setExpectedResponseBody(command.expectedResponseBody());
     existing.setResponseRegex(command.responseRegex());
+    applyDefaults(existing);
 
     return mapper.toDto(repository.save(existing));
   }
@@ -56,13 +58,31 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
 
   @Override
   public PagedResponseDto<CheckPolicyDto> getPoliciesByWorkspace(
-      Long workspaceId, int page, int size) {
-    List<CheckPolicy> policies = repository.findByWorkspaceId(workspaceId, page, size);
-    long total = repository.countByWorkspaceId(workspaceId);
+      Long workspaceId,
+      String search,
+      Integer expectedStatusCode,
+      Boolean hasDegradedResponseTimeThreshold,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir) {
+    int safePage = PagingUtils.normalizePage(page);
+    int safeSize = PagingUtils.normalizeSize(size);
+    var result =
+        repository.searchByWorkspace(
+            workspaceId,
+            search,
+            expectedStatusCode,
+            hasDegradedResponseTimeThreshold,
+            safePage,
+            safeSize,
+            sortBy,
+            sortDir);
 
-    List<CheckPolicyDto> dtos = policies.stream().map(mapper::toDto).collect(Collectors.toList());
+    List<CheckPolicyDto> dtos =
+        result.items().stream().map(mapper::toDto).collect(Collectors.toList());
 
-    return PagedResponseDto.of(dtos, page, size, total);
+    return PagedResponseDto.of(dtos, safePage, safeSize, result.totalItems());
   }
 
   @Override
@@ -82,6 +102,21 @@ public class ManageCheckPolicyService implements ManageCheckPolicyUseCase {
   private void validateWorkspaceAccess(Long resourceWorkspaceId, Long requestedWorkspaceId) {
     if (!resourceWorkspaceId.equals(requestedWorkspaceId)) {
       throw new AccessDeniedException();
+    }
+  }
+
+  private void applyDefaults(CheckPolicy policy) {
+    if (policy.getIntervalSeconds() == null) {
+      policy.setIntervalSeconds(CheckPolicy.DEFAULT_INTERVAL_SECONDS);
+    }
+    if (policy.getTimeoutMillis() == null) {
+      policy.setTimeoutMillis(CheckPolicy.DEFAULT_TIMEOUT_MILLIS);
+    }
+    if (policy.getRetryCount() == null) {
+      policy.setRetryCount(CheckPolicy.DEFAULT_RETRY_COUNT);
+    }
+    if (policy.getExpectedStatusCode() == null) {
+      policy.setExpectedStatusCode(CheckPolicy.DEFAULT_EXPECTED_STATUS_CODE);
     }
   }
 }

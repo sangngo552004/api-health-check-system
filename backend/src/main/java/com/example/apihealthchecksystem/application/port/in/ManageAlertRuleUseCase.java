@@ -12,7 +12,16 @@ public interface ManageAlertRuleUseCase {
 
   AlertRuleDto getAlertRule(Long workspaceId, Long id);
 
-  PagedResponseDto<AlertRuleDto> getAlertRulesByWorkspace(Long workspaceId, int page, int size);
+  PagedResponseDto<AlertRuleDto> getAlertRulesByWorkspace(
+      Long workspaceId,
+      String search,
+      String ruleType,
+      String operator,
+      Boolean isActive,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir);
 
   void deleteAlertRule(Long workspaceId, Long id);
 }

@@ -56,4 +56,11 @@ public class IncidentJpaEntity extends BaseJpaEntity {
       joinColumns = @JoinColumn(name = "incident_id"))
   @Column(name = "result_id")
   private List<Long> failingResultIds;
+
+  @ElementCollection
+  @CollectionTable(
+      name = "incident_triggered_alert_rules",
+      joinColumns = @JoinColumn(name = "incident_id"))
+  @Column(name = "alert_rule_id")
+  private List<Long> triggeredAlertRuleIds;
 }

@@ -5,7 +5,8 @@ export const ContactsToolbar: React.FC<{
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   onCreate: () => void;
-}> = ({ searchTerm, onSearchTermChange, onCreate }) => (
+  filters?: React.ReactNode;
+}> = ({ searchTerm, onSearchTermChange, onCreate, filters }) => (
   <>
     <div
       style={{
@@ -16,7 +17,7 @@ export const ContactsToolbar: React.FC<{
       }}
     >
       <div>
-        <p className="eyebrow">Quan ly nhan thong bao</p>
+        <p className="eyebrow">Quản lý nhận thông báo</p>
         <h1
           style={{
             color: "var(--text-primary)",
@@ -25,7 +26,7 @@ export const ContactsToolbar: React.FC<{
             margin: "8px 0 0 0",
           }}
         >
-          Contact Groups
+          Nhóm liên hệ
         </h1>
       </div>
       <button
@@ -50,7 +51,7 @@ export const ContactsToolbar: React.FC<{
         onMouseOut={(e) => (e.currentTarget.style.transform = "none")}
       >
         <Plus size={18} />
-        Tao Contact Group
+        Tạo nhóm liên hệ
       </button>
     </div>
 
@@ -61,9 +62,10 @@ export const ContactsToolbar: React.FC<{
         padding: "16px 24px",
         display: "flex",
         gap: "16px",
+        flexWrap: "wrap",
       }}
     >
-      <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
+      <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
         <Search
           size={18}
           style={{
@@ -76,7 +78,7 @@ export const ContactsToolbar: React.FC<{
         />
         <input
           type="text"
-          placeholder="Tim kiem nhom..."
+          placeholder="Tìm kiếm nhóm..."
           value={searchTerm}
           onChange={(e) => onSearchTermChange(e.target.value)}
           style={{
@@ -90,6 +92,7 @@ export const ContactsToolbar: React.FC<{
           }}
         />
       </div>
+      {filters}
     </div>
   </>
 );

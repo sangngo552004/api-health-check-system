@@ -34,4 +34,18 @@ public class HealthCheckResultRepositoryAdapter implements HealthCheckResultRepo
         .map(mapper::toDomain)
         .collect(Collectors.toList());
   }
+
+  @Override
+  public List<HealthCheckResult> findByEndpointIdsOrderByCheckedAtDesc(List<Long> endpointIds) {
+    return jpaRepository.findByEndpointIdInOrderByCheckedAtDesc(endpointIds).stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<HealthCheckResult> findAllByIds(List<Long> resultIds) {
+    return jpaRepository.findByIdIn(resultIds).stream()
+        .map(mapper::toDomain)
+        .collect(Collectors.toList());
+  }
 }

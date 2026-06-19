@@ -1,15 +1,17 @@
 import { createContext } from "react";
 
+export type AppRole = "ADMIN" | "USER";
+
 export interface User {
   id: number;
   username: string;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
 }
 
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string | null;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
   requiresPasswordChange: boolean;
 }
 

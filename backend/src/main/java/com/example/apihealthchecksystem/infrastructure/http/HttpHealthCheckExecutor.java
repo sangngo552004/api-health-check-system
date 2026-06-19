@@ -53,7 +53,7 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
       }
 
       HttpResponse<String> response =
-          client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+          sendWithRetry(client, requestBuilder.build(), policy.effectiveRetryCount());
 
       long responseTime = System.currentTimeMillis() - startTime;
       int statusCode = response.statusCode();
@@ -90,8 +90,8 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
 
       // Kiểm tra DEGRADED (phản hồi chậm nhưng vẫn thành công)
       if (success
-          && policy.hasLatencyThreshold()
-          && responseTime > policy.getLatencyThresholdMillis()) {
+          && policy.hasDegradedResponseTimeThreshold()
+          && responseTime > policy.getDegradedResponseTimeMillis()) {
         status = CheckStatus.DEGRADED;
         errorMessage = "High latency: " + responseTime + "ms";
       }
@@ -126,5 +126,18 @@ public class HttpHealthCheckExecutor implements HealthCheckExecutor {
           .nodeId(System.getProperty("app.scheduler.node-id", "local"))
           .build();
     }
+  }
+
+  private HttpResponse<String> sendWithRetry(
+      HttpClient client, HttpRequest request, int retryCount) throws Exception {
+    Exception lastException = null;
+    for (int attempt = 0; attempt <= retryCount; attempt++) {
+      try {
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+      } catch (Exception ex) {
+        lastException = ex;
+      }
+    }
+    throw lastException == null ? new IllegalStateException("HTTP request failed") : lastException;
   }
 }

@@ -7,13 +7,17 @@ import lombok.Data;
 @Data
 @Builder
 public class CheckPolicy {
+  public static final int DEFAULT_INTERVAL_SECONDS = 60;
+  public static final int DEFAULT_TIMEOUT_MILLIS = 5000;
+  public static final int DEFAULT_RETRY_COUNT = 0;
+  public static final int DEFAULT_EXPECTED_STATUS_CODE = 200;
+
   private Long id;
   private String name;
   private Integer intervalSeconds;
   private Integer timeoutMillis;
   private Integer retryCount;
-  private Integer failureThreshold;
-  private Integer latencyThresholdMillis;
+  private Integer degradedResponseTimeMillis;
   private Integer expectedStatusCode;
   private String expectedResponseBody;
   private String responseRegex;
@@ -22,16 +26,20 @@ public class CheckPolicy {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
-  public int effectiveFailureThreshold() {
-    return failureThreshold != null ? failureThreshold : 3;
+  public int effectiveIntervalSeconds() {
+    return intervalSeconds != null ? intervalSeconds : DEFAULT_INTERVAL_SECONDS;
   }
 
   public int effectiveTimeoutMillis() {
-    return timeoutMillis != null ? timeoutMillis : 5000;
+    return timeoutMillis != null ? timeoutMillis : DEFAULT_TIMEOUT_MILLIS;
+  }
+
+  public int effectiveRetryCount() {
+    return retryCount != null ? retryCount : DEFAULT_RETRY_COUNT;
   }
 
   public int effectiveExpectedStatusCode() {
-    return expectedStatusCode != null ? expectedStatusCode : 200;
+    return expectedStatusCode != null ? expectedStatusCode : DEFAULT_EXPECTED_STATUS_CODE;
   }
 
   public boolean hasExpectedResponseBody() {
@@ -42,7 +50,7 @@ public class CheckPolicy {
     return responseRegex != null && !responseRegex.isBlank();
   }
 
-  public boolean hasLatencyThreshold() {
-    return latencyThresholdMillis != null;
+  public boolean hasDegradedResponseTimeThreshold() {
+    return degradedResponseTimeMillis != null;
   }
 }

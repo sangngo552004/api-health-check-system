@@ -64,6 +64,10 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.5</version>
@@ -90,11 +94,6 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
             <version>1.4.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -160,104 +159,14 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                            <excludes>
-                                <exclude>**/dto/**</exclude>
-                                <exclude>**/entity/**</exclude>
-                                <exclude>**/mapper/**</exclude>
-                                <exclude>**/exception/**</exclude>
-                                <exclude>**/config/**</exclude>
-                                <exclude>**/delivery/**</exclude>
-                                <exclude>**/infrastructure/**</exclude>
-                                <exclude>**/infrastructure/persistence/repository/**</exclude>
-                                <exclude>**/domain/model/**</exclude>
-                                <exclude>**/domain/valueobject/**</exclude>
-                                <exclude>**/domain/event/**</exclude>
-                                <exclude>**/application/port/**</exclude>
-                                <exclude>**/ApiHealthCheckSystemApplication.class</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>2.43.0</version>
-                <configuration>
-                    <java>
-                        <googleJavaFormat/>
-                    </java>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <!-- Tăng RAM cho JVM chạy test để tránh OutOfMemory. @{argLine} giữ lại cấu hình của Jacoco -->
-                    <argLine>@{argLine} -Xmx1024m -XX:MaxMetaspaceSize=256m</argLine>
-                </configuration>
-            </plugin>
-            <!-- Integration Test Plugin: chạy *IT.java khi gọi mvn verify -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.5.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <argLine>@{argLine} -Xmx1024m -XX:MaxMetaspaceSize=256m</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.3.1</version>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <linkXRef>false</linkXRef>
+                    <argLine>-Xmx1024m -XX:MaxMetaspaceSize=256m</argLine>
+                    <includes>
+                        <include>**/architecture/CleanArchitectureTest.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

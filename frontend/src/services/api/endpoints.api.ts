@@ -6,10 +6,23 @@ import {
 } from "../../types/endpoint.types";
 import { PagedResponseDto } from "../../types/common.types";
 
+export interface EndpointListParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  environment?: string;
+  status?: string;
+  method?: string;
+  checkType?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
 export const endpointsApi = {
-  getEndpoints: (page = 0, size = 10) => {
+  getEndpoints: (params?: EndpointListParams) => {
     return api.get<PagedResponseDto<EndpointDto>>("/endpoints", {
-      params: { page, size },
+      params: params as Record<string, string | number | boolean | undefined>,
     });
   },
 

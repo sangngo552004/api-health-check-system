@@ -7,6 +7,8 @@ import com.example.apihealthchecksystem.application.dto.request.AdminWorkspaceUp
 import com.example.apihealthchecksystem.application.dto.response.AdminUserDto;
 import com.example.apihealthchecksystem.application.dto.response.PagedResponseDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDto;
+import com.example.apihealthchecksystem.application.dto.response.WorkspaceMemberDto;
+import java.util.List;
 
 public interface ManageAdminUseCase {
   PagedResponseDto<AdminUserDto> getUsers(
@@ -37,9 +39,15 @@ public interface ManageAdminUseCase {
 
   WorkspaceDto getWorkspaceById(Long id);
 
-  WorkspaceDto createWorkspace(AdminWorkspaceCreateCommand command);
+  WorkspaceDto createWorkspace(AdminWorkspaceCreateCommand command, Long currentUserId);
 
   WorkspaceDto updateWorkspace(Long id, AdminWorkspaceUpdateCommand command);
 
   void deleteWorkspace(Long id);
+
+  void addWorkspaceMember(Long workspaceId, Long userId);
+
+  void removeWorkspaceMember(Long workspaceId, Long userId);
+
+  List<WorkspaceMemberDto> getWorkspaceMembers(Long workspaceId);
 }

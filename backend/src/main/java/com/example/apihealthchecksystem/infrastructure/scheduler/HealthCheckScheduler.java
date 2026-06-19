@@ -17,10 +17,14 @@ public class HealthCheckScheduler {
    * Định kỳ quét tất cả các endpoint active và kiểm tra sức khỏe. Chạy mỗi 60 giây (hoặc cấu hình
    * qua application.properties).
    */
-  @Scheduled(fixedDelayString = "${app.scheduler.interval-ms:60000}")
+  @Scheduled(fixedDelayString = "${app.scheduler.interval-ms:600000}")
   public void runPeriodicHealthCheck() {
-    log.info("Scheduler: Bắt đầu chu kỳ health check...");
+    log.info(
+        "Scheduler: Bắt đầu chu kỳ health check trên thread {}...",
+        Thread.currentThread().getName());
     monitorEndpointUseCase.runHealthCheckForAll();
-    log.info("Scheduler: Đã hoàn tất chu kỳ health check.");
+    log.info(
+        "Scheduler: Đã hoàn tất chu kỳ health check trên thread {}.",
+        Thread.currentThread().getName());
   }
 }

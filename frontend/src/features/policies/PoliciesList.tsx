@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useToast } from "../../context/useToast";
 import { usePolicyStore } from "../../store/usePolicyStore";
 import { Plus, Search, Edit2, Trash2, Activity, Settings } from "lucide-react";
 import {
@@ -18,7 +19,11 @@ export const PoliciesList: React.FC = () => {
     updatePolicy,
     deletePolicy,
   } = usePolicyStore();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [latencyFilter, setLatencyFilter] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] =
@@ -26,12 +31,16 @@ export const PoliciesList: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchPolicies(0, 100);
-  }, [fetchPolicies]);
-
-  const filteredPolicies = policies.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+    void fetchPolicies({
+      page: 0,
+      size: 100,
+      search: searchTerm.trim() || undefined,
+      hasDegradedResponseTimeThreshold:
+        latencyFilter === "" ? undefined : latencyFilter === "true",
+      sortBy,
+      sortDir,
+    });
+  }, [fetchPolicies, latencyFilter, searchTerm, sortBy, sortDir]);
 
   const handleAdd = () => {
     setEditingPolicy(null);
@@ -45,8 +54,7 @@ export const PoliciesList: React.FC = () => {
       intervalSeconds: p.intervalSeconds,
       timeoutMillis: p.timeoutMillis,
       retryCount: p.retryCount,
-      failureThreshold: p.failureThreshold,
-      latencyThresholdMillis: p.latencyThresholdMillis,
+      degradedResponseTimeMillis: p.degradedResponseTimeMillis,
       expectedStatusCode: p.expectedStatusCode,
       expectedResponseBody: p.expectedResponseBody,
       responseRegex: p.responseRegex,
@@ -54,11 +62,37 @@ export const PoliciesList: React.FC = () => {
     setIsFormOpen(true);
   };
 
+  const handleDelete = async (policy: CheckPolicyDto) => {
+    if (
+      !window.confirm(
+        "Bạn có chắc muốn xoá Policy này? Các Endpoint dùng Policy này sẽ bị ảnh hưởng.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deletePolicy(policy.id);
+      showToast({
+        title: "Xóa policy thành công",
+        description: `Policy ${policy.name} đã được xóa.`,
+        variant: "success",
+      });
+    } catch (error) {
+      showToast({
+        title: "Xóa policy thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
+    }
+  };
+
   const handleFormSubmit = async (data: PolicyFormData) => {
     setSubmitting(true);
     try {
       const payload: CheckPolicyCreateCommand = {
         ...data,
+        degradedResponseTimeMillis: data.degradedResponseTimeMillis ?? undefined,
         expectedStatusCode: data.expectedStatusCode ?? undefined,
         expectedResponseBody: data.expectedResponseBody ?? undefined,
         responseRegex: data.responseRegex ?? undefined,
@@ -69,12 +103,28 @@ export const PoliciesList: React.FC = () => {
           ...payload,
           id: editingPolicy.id,
         });
+        showToast({
+          title: "Cập nhật policy thành công",
+          description: `Policy ${data.name} đã được cập nhật.`,
+          variant: "success",
+        });
       } else {
         await createPolicy(payload);
+        showToast({
+          title: "Tạo policy thành công",
+          description: `Policy ${data.name} đã được tạo.`,
+          variant: "success",
+        });
       }
       setIsFormOpen(false);
     } catch (error) {
-      alert("Có lỗi xảy ra: " + getErrorMessage(error));
+      showToast({
+        title: editingPolicy
+          ? "Cập nhật policy thất bại"
+          : "Tạo policy thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +151,7 @@ export const PoliciesList: React.FC = () => {
               margin: "8px 0 0 0",
             }}
           >
-            Check Policies
+            Chính sách kiểm tra
           </h1>
         </div>
         <button
@@ -126,7 +176,7 @@ export const PoliciesList: React.FC = () => {
           onMouseOut={(e) => (e.currentTarget.style.transform = "none")}
         >
           <Plus size={18} />
-          Tạo Policy
+          Tạo policy
         </button>
       </div>
 
@@ -167,6 +217,33 @@ export const PoliciesList: React.FC = () => {
             }}
           />
         </div>
+        <select
+          value={latencyFilter}
+          onChange={(event) => setLatencyFilter(event.target.value)}
+          style={toolbarSelectStyle}
+        >
+          <option value="">Tất cả policy</option>
+          <option value="true">Có ngưỡng độ trễ</option>
+          <option value="false">Không ngưỡng độ trễ</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+          style={toolbarSelectStyle}
+        >
+          <option value="createdAt">Mới tạo gần đây</option>
+          <option value="name">Tên policy</option>
+          <option value="intervalSeconds">Chu kỳ kiểm tra</option>
+          <option value="timeoutMillis">Timeout</option>
+        </select>
+        <select
+          value={sortDir}
+          onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+          style={toolbarSelectStyle}
+        >
+          <option value="desc">Giảm dần</option>
+          <option value="asc">Tăng dần</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -223,7 +300,7 @@ export const PoliciesList: React.FC = () => {
                   fontSize: "0.85rem",
                 }}
               >
-                Ngưỡng trễ
+                Ngưỡng chậm
               </th>
               <th
                 style={{
@@ -257,7 +334,7 @@ export const PoliciesList: React.FC = () => {
                   Đang tải danh sách...
                 </td>
               </tr>
-            ) : filteredPolicies.length === 0 ? (
+            ) : policies.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -271,7 +348,7 @@ export const PoliciesList: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              filteredPolicies.map((p) => (
+              policies.map((p) => (
                 <tr
                   key={p.id}
                   style={{
@@ -328,11 +405,8 @@ export const PoliciesList: React.FC = () => {
                       color: "var(--text-secondary)",
                     }}
                   >
-                    Fail{" "}
-                    <strong style={{ color: "var(--error-color)" }}>
-                      {p.failureThreshold}
-                    </strong>{" "}
-                    lần (Timeout: {p.timeoutMillis}ms)
+                    Timeout <strong style={{ color: "var(--error-color)" }}>{p.timeoutMillis}ms</strong>
+                    {" · "}Retry <strong style={{ color: "var(--text-primary)" }}>{p.retryCount}</strong>
                   </td>
                   <td
                     style={{
@@ -340,9 +414,13 @@ export const PoliciesList: React.FC = () => {
                       color: "var(--text-secondary)",
                     }}
                   >
-                    <strong style={{ color: "var(--warning-color)" }}>
-                      &gt; {p.latencyThresholdMillis}ms
-                    </strong>
+                    {p.degradedResponseTimeMillis ? (
+                      <strong style={{ color: "var(--warning-color)" }}>
+                        &gt;= {p.degradedResponseTimeMillis}ms
+                      </strong>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)" }}>Không cấu hình</span>
+                    )}
                   </td>
                   <td style={{ padding: "16px 24px", textAlign: "right" }}>
                     <div
@@ -366,15 +444,7 @@ export const PoliciesList: React.FC = () => {
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Bạn có chắc muốn xoá Policy này? Các Endpoint dùng Policy này sẽ bị ảnh hưởng.",
-                            )
-                          ) {
-                            deletePolicy(p.id);
-                          }
-                        }}
+                        onClick={() => void handleDelete(p)}
                         style={{
                           background: "none",
                           border: "none",
@@ -405,4 +475,13 @@ export const PoliciesList: React.FC = () => {
       )}
     </div>
   );
+};
+
+const toolbarSelectStyle: React.CSSProperties = {
+  minWidth: "180px",
+  padding: "10px 14px",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--card-border)",
+  borderRadius: "10px",
+  color: "var(--text-primary)",
 };

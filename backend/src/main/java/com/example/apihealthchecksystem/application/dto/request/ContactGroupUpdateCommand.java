@@ -9,6 +9,4 @@ public record ContactGroupUpdateCommand(
     @NotBlank String name,
     String description,
     Boolean isActive,
-    List<Long> userIds,
-    List<String> emailAddresses,
-    List<String> webhookUrls) {}
+    List<String> emailAddresses) {}

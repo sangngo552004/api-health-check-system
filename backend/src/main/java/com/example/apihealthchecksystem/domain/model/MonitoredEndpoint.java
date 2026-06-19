@@ -7,11 +7,15 @@ import com.example.apihealthchecksystem.domain.valueobject.HttpMethod;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonitoredEndpoint {
   private Long id;
   private String name;
@@ -32,6 +36,7 @@ public class MonitoredEndpoint {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private LocalDateTime lastCheckedAt;
+  private LocalDateTime nextRunAt;
 
   public void initializeForCreation(Long workspaceId, Long createdBy, LocalDateTime now) {
     this.workspaceId = workspaceId;
@@ -39,6 +44,7 @@ public class MonitoredEndpoint {
     this.status = EndpointStatus.UP;
     this.createdAt = now;
     this.updatedAt = now;
+    this.nextRunAt = now;
   }
 
   public void applyUpdates(
@@ -75,6 +81,10 @@ public class MonitoredEndpoint {
   public void markChecked(HealthCheckResult result) {
     this.status = mapStatus(result.getStatus());
     this.lastCheckedAt = result.getCheckedAt();
+  }
+
+  public void scheduleNextRun(LocalDateTime nextRunAt) {
+    this.nextRunAt = nextRunAt;
   }
 
   private EndpointStatus mapStatus(CheckStatus checkStatus) {

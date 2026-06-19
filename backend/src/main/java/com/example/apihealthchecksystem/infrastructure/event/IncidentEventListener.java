@@ -1,61 +1,81 @@
 package com.example.apihealthchecksystem.infrastructure.event;
 
-import com.example.apihealthchecksystem.application.port.out.ContactGroupRepository;
-import com.example.apihealthchecksystem.application.port.out.EndpointRepository;
-import com.example.apihealthchecksystem.application.port.out.IncidentRepository;
 import com.example.apihealthchecksystem.application.port.out.NotificationPort;
 import com.example.apihealthchecksystem.domain.event.IncidentOpenedEvent;
 import com.example.apihealthchecksystem.domain.event.IncidentResolvedEvent;
-import com.example.apihealthchecksystem.domain.model.ContactGroup;
-import com.example.apihealthchecksystem.domain.model.Incident;
-import com.example.apihealthchecksystem.domain.model.MonitoredEndpoint;
-import java.util.List;
+import com.example.apihealthchecksystem.infrastructure.notification.IncidentNotificationContextResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class IncidentEventListener {
 
-  private final IncidentRepository incidentRepository;
-  private final EndpointRepository endpointRepository;
-  private final ContactGroupRepository contactGroupRepository;
+  private final IncidentNotificationContextResolver notificationContextResolver;
   private final NotificationPort notificationPort;
 
   @Async
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleIncidentOpened(IncidentOpenedEvent event) {
-    log.info("Nhận sự kiện IncidentOpenedEvent cho incident {}", event.incidentId());
+    log.info(
+        "Nhận sự kiện IncidentOpenedEvent cho incident {} trên thread {}",
+        event.incidentId(),
+        Thread.currentThread().getName());
 
-    Incident incident = incidentRepository.findById(event.incidentId()).orElse(null);
-    MonitoredEndpoint endpoint = endpointRepository.findById(event.endpointId()).orElse(null);
-
-    if (incident != null && endpoint != null) {
-      // Lấy danh sách contact group của workspace (hoặc riêng của endpoint nếu có cấu hình
-      // override)
-      // Hiện tại đơn giản hóa: lấy tất cả contact group của workspace
-      List<ContactGroup> contactGroups =
-          contactGroupRepository.findByWorkspaceId(endpoint.getWorkspaceId(), 0, 100);
-      notificationPort.sendIncidentAlert(incident, endpoint, contactGroups);
+    var resolvedNotification =
+        notificationContextResolver.resolve(event.incidentId(), event.endpointId());
+    if (resolvedNotification.isEmpty()) {
+      log.warn(
+          "Không thể gửi alert cho incident {} vì incident={}, endpoint={}",
+          event.incidentId(),
+          "MISSING",
+          "MISSING_OR_NOT_ACCESSIBLE");
+      return;
     }
+
+    var notification = resolvedNotification.get();
+    log.info(
+        "Chuẩn bị gửi alert cho incident {} endpoint {} với {} recipient(s): {}",
+        notification.incident().getId(),
+        notification.endpoint().getId(),
+        notification.recipientEmails().size(),
+        notification.recipientEmails());
+    notificationPort.sendIncidentAlert(
+        notification.incident(), notification.endpoint(), notification.recipientEmails());
   }
 
   @Async
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleIncidentResolved(IncidentResolvedEvent event) {
-    log.info("Nhận sự kiện IncidentResolvedEvent cho incident {}", event.incidentId());
+    log.info(
+        "Nhận sự kiện IncidentResolvedEvent cho incident {} trên thread {}",
+        event.incidentId(),
+        Thread.currentThread().getName());
 
-    Incident incident = incidentRepository.findById(event.incidentId()).orElse(null);
-    MonitoredEndpoint endpoint = endpointRepository.findById(event.endpointId()).orElse(null);
-
-    if (incident != null && endpoint != null) {
-      List<ContactGroup> contactGroups =
-          contactGroupRepository.findByWorkspaceId(endpoint.getWorkspaceId(), 0, 100);
-      notificationPort.sendRecoveryAlert(incident, endpoint, contactGroups);
+    var resolvedNotification =
+        notificationContextResolver.resolve(event.incidentId(), event.endpointId());
+    if (resolvedNotification.isEmpty()) {
+      log.warn(
+          "Không thể gửi recovery alert cho incident {} vì incident={}, endpoint={}",
+          event.incidentId(),
+          "MISSING",
+          "MISSING_OR_NOT_ACCESSIBLE");
+      return;
     }
+
+    var notification = resolvedNotification.get();
+    log.info(
+        "Chuẩn bị gửi recovery alert cho incident {} endpoint {} với {} recipient(s): {}",
+        notification.incident().getId(),
+        notification.endpoint().getId(),
+        notification.recipientEmails().size(),
+        notification.recipientEmails());
+    notificationPort.sendRecoveryAlert(
+        notification.incident(), notification.endpoint(), notification.recipientEmails());
   }
 }

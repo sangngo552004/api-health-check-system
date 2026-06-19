@@ -41,7 +41,7 @@ export const CheckboxField: React.FC<{
   </label>
 );
 
-export const RoleBadge: React.FC<{ role: "SUPER_ADMIN" | "USER" }> = ({
+export const RoleBadge: React.FC<{ role: "ADMIN" | "USER" }> = ({
   role,
 }) => (
   <span
@@ -52,9 +52,9 @@ export const RoleBadge: React.FC<{ role: "SUPER_ADMIN" | "USER" }> = ({
       borderRadius: "999px",
       fontSize: "0.78rem",
       fontWeight: 700,
-      color: role === "SUPER_ADMIN" ? "#fb923c" : "#38bdf8",
+      color: role === "ADMIN" ? "#fb923c" : "#38bdf8",
       background:
-        role === "SUPER_ADMIN"
+        role === "ADMIN"
           ? "rgba(249,115,22,0.12)"
           : "rgba(56,189,248,0.12)",
     }}
@@ -75,8 +75,8 @@ export const StatusBadge: React.FC<{ active: boolean }> = ({ active }) => (
       color: active ? "#34d399" : "#f87171",
       background: active ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
     }}
-  >
-    {active ? "Active" : "Inactive"}
+    >
+      {active ? "Đang hoạt động" : "Ngưng hoạt động"}
   </span>
 );
 
@@ -109,7 +109,7 @@ export const PaginationBar: React.FC<{
           color: "var(--text-muted)",
         }}
       >
-        <span>Rows per page</span>
+        <span>Số dòng mỗi trang</span>
         <select
           value={String(size)}
           onChange={(e) => onSizeChange(Number(e.target.value))}
@@ -122,7 +122,7 @@ export const PaginationBar: React.FC<{
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <span style={{ color: "var(--text-muted)" }}>
-          Page {totalPages === 0 ? 0 : page + 1} / {totalPages}
+          Trang {totalPages === 0 ? 0 : page + 1} / {totalPages}
         </span>
         <button
           type="button"

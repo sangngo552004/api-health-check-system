@@ -51,7 +51,7 @@ export const ActiveIncidentsBoard: React.FC<{
           </p>
         </div>
         <Link
-          to="/incidents?status=OPEN"
+          to="/app/incidents?status=OPEN"
           style={{
             marginLeft: "auto",
             color: "var(--accent-color)",
@@ -86,7 +86,7 @@ export const ActiveIncidentsBoard: React.FC<{
               }}
             >
               <Link
-                to={`/incidents?incidentId=${incident.id}&endpointId=${incident.endpointId}&status=OPEN`}
+                to={`/app/incidents?incidentId=${incident.id}&endpointId=${incident.endpointId}&status=OPEN`}
                 style={{
                   color: "inherit",
                   textDecoration: "none",

@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Activity,
-  Edit2,
-  Link as LinkIcon,
-  Mail,
-  Trash2,
-  Users,
-  Zap,
-} from "lucide-react";
+import { Activity, Edit2, Mail, Trash2, Users, Zap } from "lucide-react";
 import { ContactGroupDto } from "../../types/contact.types";
 
 export const ContactsTable: React.FC<{
@@ -31,10 +23,10 @@ export const ContactsTable: React.FC<{
             background: "var(--bg-secondary)",
           }}
         >
-          <th style={thStyle}>Ten nhom</th>
-          <th style={thStyle}>Phuong thuc nhan</th>
-          <th style={thStyle}>Trang thai</th>
-          <th style={{ ...thStyle, textAlign: "right" }}>Thao tac</th>
+          <th style={thStyle}>Tên nhóm</th>
+          <th style={thStyle}>Phương thức nhận</th>
+          <th style={thStyle}>Trạng thái</th>
+          <th style={{ ...thStyle, textAlign: "right" }}>Thao tác</th>
         </tr>
       </thead>
       <tbody>
@@ -46,13 +38,13 @@ export const ContactsTable: React.FC<{
                 className="spin"
                 style={{ margin: "0 auto 12px" }}
               />
-              Dang tai danh sach...
+              Đang tải danh sách...
             </td>
           </tr>
         ) : contacts.length === 0 ? (
           <tr>
             <td colSpan={4} style={emptyCellStyle}>
-              Chua co Contact Group nao. Hay tao mot cai!
+              Chưa có Contact Group nào. Hãy tạo một cái!
             </td>
           </tr>
         ) : (
@@ -95,48 +87,23 @@ export const ContactsTable: React.FC<{
                     <div
                       style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}
                     >
-                      {contact.description || "Khong co mo ta"}
+                      {contact.description || "Không có mô tả"}
                     </div>
                   </div>
                 </div>
               </td>
               <td style={{ padding: "16px 24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
-                  {contact.emailAddresses.length > 0 && (
-                    <span style={channelStyle}>
-                      <Mail size={14} /> {contact.emailAddresses.length} Emails
-                    </span>
-                  )}
-                  {contact.webhookUrls.length > 0 && (
-                    <span style={channelStyle}>
-                      <LinkIcon size={14} /> {contact.webhookUrls.length}{" "}
-                      Webhooks
-                    </span>
-                  )}
-                  {contact.userIds.length > 0 && (
-                    <span style={channelStyle}>
-                      <Users size={14} /> {contact.userIds.length} He thong User
-                    </span>
-                  )}
-                  {contact.emailAddresses.length === 0 &&
-                    contact.webhookUrls.length === 0 &&
-                    contact.userIds.length === 0 && (
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        Chua cau hinh
-                      </span>
-                    )}
-                </div>
+                {contact.emailAddresses.length > 0 ? (
+                  <span style={channelStyle}>
+                    <Mail size={14} /> {contact.emailAddresses.length} emails
+                  </span>
+                ) : (
+                  <span
+                    style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}
+                  >
+                    Chưa cấu hình email
+                  </span>
+                )}
               </td>
               <td style={{ padding: "16px 24px" }}>
                 <span
@@ -157,7 +124,7 @@ export const ContactsTable: React.FC<{
                   }}
                 >
                   <Zap size={12} />
-                  {contact.isActive ? "Hoat dong" : "Tat"}
+                  {contact.isActive ? "Hoạt động" : "Tắt"}
                 </span>
               </td>
               <td style={{ padding: "16px 24px", textAlign: "right" }}>
@@ -171,14 +138,14 @@ export const ContactsTable: React.FC<{
                   <button
                     onClick={() => onEdit(contact)}
                     style={iconButton("var(--accent-color)")}
-                    title="Chinh sua"
+                    title="Chỉnh sửa"
                   >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => onDelete(contact.id)}
                     style={iconButton("var(--error-color)")}
-                    title="Xoa"
+                    title="Xóa"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -206,7 +173,7 @@ const emptyCellStyle: React.CSSProperties = {
 };
 
 const channelStyle: React.CSSProperties = {
-  display: "flex",
+  display: "inline-flex",
   alignItems: "center",
   gap: "6px",
   fontSize: "0.8rem",

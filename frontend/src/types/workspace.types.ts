@@ -1,3 +1,5 @@
+import type { AppRole } from "../context/auth-context";
+
 export interface WorkspaceDto {
   id: number;
   name: string;
@@ -42,7 +44,7 @@ export interface AdminUserDto {
   username: string;
   email?: string;
   phoneNumber?: string;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
   isActive?: boolean;
 }
 
@@ -51,7 +53,7 @@ export interface AdminUserCreateCommand {
   email?: string;
   phoneNumber?: string;
   password: string;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
   isActive?: boolean;
   requiresPasswordChange?: boolean;
 }
@@ -61,7 +63,7 @@ export interface AdminUserUpdateCommand {
   email?: string;
   phoneNumber?: string;
   password?: string;
-  role: "SUPER_ADMIN" | "USER";
+  role: AppRole;
   isActive?: boolean;
   requiresPasswordChange?: boolean;
 }
@@ -70,7 +72,7 @@ export interface AdminWorkspaceCreateCommand {
   name: string;
   description?: string;
   slug: string;
-  ownerId: number;
+  ownerId?: number;
   isActive?: boolean;
 }
 
@@ -78,6 +80,6 @@ export interface AdminWorkspaceUpdateCommand {
   name: string;
   description?: string;
   slug: string;
-  ownerId: number;
+  ownerId?: number;
   isActive?: boolean;
 }

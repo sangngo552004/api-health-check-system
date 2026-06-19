@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { policiesApi } from "../services/api/policies.api";
+import {
+  CheckPolicyListParams,
+  policiesApi,
+} from "../services/api/policies.api";
 import {
   CheckPolicyDto,
   CheckPolicyCreateCommand,
@@ -14,8 +17,9 @@ interface PolicyState {
   totalItems: number;
   totalPages: number;
   currentPage: number;
+  lastQuery: CheckPolicyListParams;
 
-  fetchPolicies: (page?: number, size?: number) => Promise<void>;
+  fetchPolicies: (query?: CheckPolicyListParams) => Promise<void>;
   createPolicy: (data: CheckPolicyCreateCommand) => Promise<void>;
   updatePolicy: (id: number, data: CheckPolicyUpdateCommand) => Promise<void>;
   deletePolicy: (id: number) => Promise<void>;
@@ -28,16 +32,25 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
   totalItems: 0,
   totalPages: 0,
   currentPage: 0,
+  lastQuery: { page: 0, size: 10, sortBy: "createdAt", sortDir: "desc" },
 
-  fetchPolicies: async (page = 0, size = 10) => {
+  fetchPolicies: async (query = {}) => {
     set({ loading: true, error: null });
     try {
-      const res = await policiesApi.getPolicies(page, size);
+      const previous = get().lastQuery;
+      const nextQuery = {
+        ...previous,
+        ...query,
+        page: query.page ?? previous.page ?? 0,
+        size: query.size ?? previous.size ?? 10,
+      };
+      const res = await policiesApi.getPolicies(nextQuery);
       set({
         policies: res.items,
         totalItems: res.totalItems,
         totalPages: res.totalPages,
-        currentPage: page,
+        currentPage: nextQuery.page ?? 0,
+        lastQuery: nextQuery,
         loading: false,
       });
     } catch (error) {
@@ -52,7 +65,7 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await policiesApi.createPolicy(data);
-      await get().fetchPolicies(get().currentPage);
+      await get().fetchPolicies();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi tạo Policy"),
@@ -66,7 +79,7 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await policiesApi.updatePolicy(id, data);
-      await get().fetchPolicies(get().currentPage);
+      await get().fetchPolicies();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi cập nhật Policy"),
@@ -80,7 +93,7 @@ export const usePolicyStore = create<PolicyState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await policiesApi.deletePolicy(id);
-      await get().fetchPolicies(get().currentPage);
+      await get().fetchPolicies();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi xóa Policy"),

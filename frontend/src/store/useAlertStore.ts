@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { alertsApi } from "../services/api/alerts.api";
+import {
+  AlertRuleListParams,
+  alertsApi,
+} from "../services/api/alerts.api";
 import {
   AlertRuleDto,
   AlertRuleCreateCommand,
@@ -14,8 +17,9 @@ interface AlertState {
   totalItems: number;
   totalPages: number;
   currentPage: number;
+  lastQuery: AlertRuleListParams;
 
-  fetchAlertRules: (page?: number, size?: number) => Promise<void>;
+  fetchAlertRules: (query?: AlertRuleListParams) => Promise<void>;
   createAlertRule: (data: AlertRuleCreateCommand) => Promise<void>;
   updateAlertRule: (id: number, data: AlertRuleUpdateCommand) => Promise<void>;
   deleteAlertRule: (id: number) => Promise<void>;
@@ -28,16 +32,25 @@ export const useAlertStore = create<AlertState>((set, get) => ({
   totalItems: 0,
   totalPages: 0,
   currentPage: 0,
+  lastQuery: { page: 0, size: 10, sortBy: "createdAt", sortDir: "desc" },
 
-  fetchAlertRules: async (page = 0, size = 10) => {
+  fetchAlertRules: async (query = {}) => {
     set({ loading: true, error: null });
     try {
-      const res = await alertsApi.getAlertRules(page, size);
+      const previous = get().lastQuery;
+      const nextQuery = {
+        ...previous,
+        ...query,
+        page: query.page ?? previous.page ?? 0,
+        size: query.size ?? previous.size ?? 10,
+      };
+      const res = await alertsApi.getAlertRules(nextQuery);
       set({
         alertRules: res.items,
         totalItems: res.totalItems,
         totalPages: res.totalPages,
-        currentPage: page,
+        currentPage: nextQuery.page ?? 0,
+        lastQuery: nextQuery,
         loading: false,
       });
     } catch (error) {
@@ -52,7 +65,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await alertsApi.createAlertRule(data);
-      await get().fetchAlertRules(get().currentPage);
+      await get().fetchAlertRules();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi tạo Alert Rule"),
@@ -66,7 +79,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await alertsApi.updateAlertRule(id, data);
-      await get().fetchAlertRules(get().currentPage);
+      await get().fetchAlertRules();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi cập nhật Alert Rule"),
@@ -80,7 +93,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await alertsApi.deleteAlertRule(id);
-      await get().fetchAlertRules(get().currentPage);
+      await get().fetchAlertRules();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi xóa Alert Rule"),

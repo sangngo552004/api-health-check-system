@@ -24,11 +24,8 @@ public class CheckPolicyJpaEntity extends BaseJpaEntity {
   @Column(name = "retry_count", nullable = false)
   private Integer retryCount;
 
-  @Column(name = "failure_threshold", nullable = false)
-  private Integer failureThreshold;
-
-  @Column(name = "latency_threshold_millis")
-  private Integer latencyThresholdMillis;
+  @Column(name = "degraded_response_time_millis")
+  private Integer degradedResponseTimeMillis;
 
   @Column(name = "expected_status_code")
   private Integer expectedStatusCode;

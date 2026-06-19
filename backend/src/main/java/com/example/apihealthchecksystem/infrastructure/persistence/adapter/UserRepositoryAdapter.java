@@ -6,13 +6,13 @@ import com.example.apihealthchecksystem.domain.model.User;
 import com.example.apihealthchecksystem.domain.valueobject.UserRole;
 import com.example.apihealthchecksystem.infrastructure.persistence.mapper.UserMapper;
 import com.example.apihealthchecksystem.infrastructure.persistence.repository.UserJpaRepository;
+import com.example.apihealthchecksystem.infrastructure.persistence.support.RepositoryQuerySupport;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,8 +38,13 @@ public class UserRepositoryAdapter implements UserRepository {
       int size,
       String sortBy,
       String sortDir) {
-    var pageable = PageRequest.of(page, size, buildSort(sortBy, sortDir));
-    var result = jpaRepository.search(normalizeSearch(search), role, isActive, pageable);
+    var pageable =
+        PageRequest.of(
+            page,
+            size,
+            RepositoryQuerySupport.buildSort(sortBy, sortDir, ALLOWED_SORT_FIELDS, "createdAt"));
+    var result =
+        jpaRepository.search(RepositoryQuerySupport.normalizeSearch(search), role, isActive, pageable);
     return new PageResult<>(
         result.getContent().stream().map(mapper::toDomain).toList(), result.getTotalElements());
   }
@@ -86,17 +91,4 @@ public class UserRepositoryAdapter implements UserRepository {
     jpaRepository.deleteById(id);
   }
 
-  private Sort buildSort(String sortBy, String sortDir) {
-    String normalizedSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
-    Sort.Direction direction =
-        "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-    return Sort.by(direction, normalizedSortBy);
-  }
-
-  private String normalizeSearch(String search) {
-    if (search == null || search.isBlank()) {
-      return null;
-    }
-    return search.trim();
-  }
 }

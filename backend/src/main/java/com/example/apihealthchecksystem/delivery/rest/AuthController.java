@@ -3,7 +3,7 @@ package com.example.apihealthchecksystem.delivery.rest;
 import com.example.apihealthchecksystem.application.dto.request.LoginRequest;
 import com.example.apihealthchecksystem.application.dto.response.LoginResponse;
 import com.example.apihealthchecksystem.application.exception.AppErrorCode;
-import com.example.apihealthchecksystem.application.exception.AppException;
+import com.example.apihealthchecksystem.application.exception.UnauthorizedException;
 import com.example.apihealthchecksystem.application.port.in.AuthUseCase;
 import com.example.apihealthchecksystem.delivery.rest.common.ApiResponse;
 import com.example.apihealthchecksystem.delivery.rest.common.security.RefreshTokenCookieService;
@@ -46,7 +46,7 @@ public class AuthController {
   public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(HttpServletRequest request) {
     String refreshToken = refreshTokenCookieService.extractRefreshToken(request);
     if (refreshToken == null || refreshToken.isBlank()) {
-      throw new AppException(AppErrorCode.UNAUTHORIZED, "Missing refresh token cookie");
+      throw new UnauthorizedException(AppErrorCode.REFRESH_TOKEN_MISSING);
     }
 
     LoginResponse response = authUseCase.refreshToken(refreshToken);

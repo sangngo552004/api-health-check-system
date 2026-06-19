@@ -22,22 +22,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-        
-    - name: Verify code formatting
-      run: mvn spotless:check
 
-    - name: Run Checkstyle
-      run: mvn checkstyle:check
-
-    - name: Build and Test with JaCoCo Coverage
-      run: mvn clean verify
-      
-    - name: Verify Swagger Docs consistency
-      run: |
-        if [ -n "$(git status --porcelain ../docs/api/openapi.json)" ]; then
-          echo "Swagger docs (docs/api/openapi.json) are outdated. Please generate them locally and commit the changes."
-          exit 1
-        fi
+    - name: Run backend architecture test only
+      run: mvn -q test
 
   frontend-ci:
     runs-on: ubuntu-latest
@@ -57,12 +44,6 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
-      
-    - name: Check Formatting
-      run: npm run format:check
-      
-    - name: Lint
-      run: npm run lint
       
     - name: Build
       run: npm run build

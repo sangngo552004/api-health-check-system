@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { endpointsApi } from "../services/api/endpoints.api";
+import {
+  EndpointListParams,
+  endpointsApi,
+} from "../services/api/endpoints.api";
 import {
   EndpointDto,
   EndpointCreateCommand,
@@ -14,8 +17,9 @@ interface EndpointState {
   totalItems: number;
   totalPages: number;
   currentPage: number;
+  lastQuery: EndpointListParams;
 
-  fetchEndpoints: (page?: number, size?: number) => Promise<void>;
+  fetchEndpoints: (query?: EndpointListParams) => Promise<void>;
   createEndpoint: (data: EndpointCreateCommand) => Promise<void>;
   updateEndpoint: (id: number, data: EndpointUpdateCommand) => Promise<void>;
   deleteEndpoint: (id: number) => Promise<void>;
@@ -28,16 +32,25 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
   totalItems: 0,
   totalPages: 0,
   currentPage: 0,
+  lastQuery: { page: 0, size: 10, sortBy: "createdAt", sortDir: "desc" },
 
-  fetchEndpoints: async (page = 0, size = 10) => {
+  fetchEndpoints: async (query = {}) => {
     set({ loading: true, error: null });
     try {
-      const res = await endpointsApi.getEndpoints(page, size);
+      const previous = get().lastQuery;
+      const nextQuery = {
+        ...previous,
+        ...query,
+        page: query.page ?? previous.page ?? 0,
+        size: query.size ?? previous.size ?? 10,
+      };
+      const res = await endpointsApi.getEndpoints(nextQuery);
       set({
         endpoints: res.items,
         totalItems: res.totalItems,
         totalPages: res.totalPages,
-        currentPage: page,
+        currentPage: nextQuery.page ?? 0,
+        lastQuery: nextQuery,
         loading: false,
       });
     } catch (error) {
@@ -52,8 +65,7 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await endpointsApi.createEndpoint(data);
-      // Reload current page
-      await get().fetchEndpoints(get().currentPage);
+      await get().fetchEndpoints();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi tạo Endpoint"),
@@ -67,7 +79,7 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await endpointsApi.updateEndpoint(id, data);
-      await get().fetchEndpoints(get().currentPage);
+      await get().fetchEndpoints();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi cập nhật Endpoint"),
@@ -81,7 +93,7 @@ export const useEndpointStore = create<EndpointState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await endpointsApi.deleteEndpoint(id);
-      await get().fetchEndpoints(get().currentPage);
+      await get().fetchEndpoints();
     } catch (error) {
       set({
         error: getErrorMessage(error, "Lỗi khi xóa Endpoint"),

@@ -1,5 +1,8 @@
 package com.example.apihealthchecksystem.delivery.rest;
 
+import com.example.apihealthchecksystem.application.dto.response.DashboardActiveIncidentsDto;
+import com.example.apihealthchecksystem.application.dto.response.DashboardLatencyChartDto;
+import com.example.apihealthchecksystem.application.dto.response.DashboardStatsSummaryDto;
 import com.example.apihealthchecksystem.application.dto.response.EndpointLatencyDto;
 import com.example.apihealthchecksystem.application.dto.response.WorkspaceDashboardStatsDto;
 import com.example.apihealthchecksystem.application.port.in.GetDashboardStatsUseCase;
@@ -21,9 +24,33 @@ public class DashboardController {
 
   private final GetDashboardStatsUseCase dashboardUseCase;
 
+  @GetMapping("/summary")
+  @PreAuthorize(
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
+  public ApiResponse<DashboardStatsSummaryDto> getDashboardSummary(
+      @RequestHeader("X-Workspace-Id") Long workspaceId) {
+    return ApiResponse.success(dashboardUseCase.getDashboardSummary(workspaceId));
+  }
+
+  @GetMapping("/active-incidents")
+  @PreAuthorize(
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
+  public ApiResponse<DashboardActiveIncidentsDto> getActiveIncidents(
+      @RequestHeader("X-Workspace-Id") Long workspaceId) {
+    return ApiResponse.success(dashboardUseCase.getActiveIncidents(workspaceId));
+  }
+
+  @GetMapping("/latency-chart")
+  @PreAuthorize(
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
+  public ApiResponse<DashboardLatencyChartDto> getLatencyChart(
+      @RequestHeader("X-Workspace-Id") Long workspaceId) {
+    return ApiResponse.success(dashboardUseCase.getLatencyChart(workspaceId));
+  }
+
   @GetMapping("/stats")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<WorkspaceDashboardStatsDto> getWorkspaceStats(
       @RequestHeader("X-Workspace-Id") Long workspaceId) {
     return ApiResponse.success(dashboardUseCase.getWorkspaceDashboardStats(workspaceId));
@@ -31,7 +58,7 @@ public class DashboardController {
 
   @GetMapping("/endpoints/{endpointId}/latency")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<List<EndpointLatencyDto>> getEndpointLatency(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long endpointId,

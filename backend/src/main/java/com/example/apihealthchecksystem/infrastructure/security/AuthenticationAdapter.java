@@ -2,7 +2,7 @@ package com.example.apihealthchecksystem.infrastructure.security;
 
 import com.example.apihealthchecksystem.application.dto.response.LoginResponse;
 import com.example.apihealthchecksystem.application.exception.AppErrorCode;
-import com.example.apihealthchecksystem.application.exception.AppException;
+import com.example.apihealthchecksystem.application.exception.UnauthorizedException;
 import com.example.apihealthchecksystem.application.port.out.AuthenticationPort;
 import com.example.apihealthchecksystem.infrastructure.persistence.entity.RefreshTokenJpaEntity;
 import com.example.apihealthchecksystem.infrastructure.persistence.entity.UserJpaEntity;
@@ -62,7 +62,7 @@ public class AuthenticationAdapter implements AuthenticationPort {
   @Transactional
   public LoginResponse refresh(String refreshToken) {
     if (!tokenProvider.validateToken(refreshToken)) {
-      throw new AppException(AppErrorCode.UNAUTHORIZED, "Invalid refresh token");
+      throw new UnauthorizedException(AppErrorCode.REFRESH_TOKEN_INVALID);
     }
 
     RefreshTokenJpaEntity refreshTokenEntity =
@@ -70,12 +70,11 @@ public class AuthenticationAdapter implements AuthenticationPort {
             .findByToken(refreshToken)
             .orElseThrow(
                 () ->
-                    new AppException(
-                        AppErrorCode.UNAUTHORIZED, "Refresh token not found in database"));
+                    new UnauthorizedException(AppErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
     if (refreshTokenEntity.getExpiryDate().isBefore(LocalDateTime.now())) {
       refreshTokenRepository.delete(refreshTokenEntity);
-      throw new AppException(AppErrorCode.UNAUTHORIZED, "Refresh token expired");
+      throw new UnauthorizedException(AppErrorCode.REFRESH_TOKEN_EXPIRED);
     }
 
     UserJpaEntity user = refreshTokenEntity.getUser();

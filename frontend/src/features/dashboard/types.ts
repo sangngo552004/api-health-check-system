@@ -1,5 +1,3 @@
-import type { EndpointStatus } from "../../types/endpoint.types";
-
 export interface IncidentSummaryDto {
   id: number;
   endpointId: number;
@@ -17,13 +15,32 @@ export interface WorkspaceDashboardStatsDto {
   degradedEndpoints: number;
   openIncidentsCount: number;
   activeIncidents: IncidentSummaryDto[];
+  latencySeries: DashboardLatencySeriesDto[];
 }
 
-export interface DashboardEndpointSummary {
-  id: number;
-  name: string;
-  url: string;
-  status: EndpointStatus;
+export interface DashboardStatsSummaryDto {
+  workspaceId: number;
+  totalEndpoints: number;
+  upEndpoints: number;
+  downEndpoints: number;
+  degradedEndpoints: number;
+}
+
+export interface DashboardActiveIncidentsDto {
+  workspaceId: number;
+  openIncidentsCount: number;
+  incidents: IncidentSummaryDto[];
+}
+
+export interface DashboardLatencySeriesDto {
+  endpointId: number;
+  endpointName: string;
+  points: EndpointLatencyDto[];
+}
+
+export interface DashboardLatencyChartDto {
+  workspaceId: number;
+  series: DashboardLatencySeriesDto[];
 }
 
 export interface EndpointLatencyDto {

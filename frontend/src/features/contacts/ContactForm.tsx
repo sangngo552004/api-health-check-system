@@ -1,49 +1,40 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { ContactGroupUpdateCommand } from "../../types/contact.types";
+import { X, Save, AlertCircle, Mail, Plus } from "lucide-react";
 import {
-  ContactGroupUpdateCommand,
-  ContactGroupCreateCommand,
-} from "../../types/contact.types";
-import { X, Save, AlertCircle } from "lucide-react";
+  formActionsStyle,
+  formCheckboxRowStyle,
+  formCloseButtonStyle,
+  formErrorStyle,
+  formInputStyle,
+  formLabelStyle,
+  formModalStyle,
+  formOverlayStyle,
+  formPrimaryButtonStyle,
+  formSecondaryButtonStyle,
+  formTextareaStyle,
+  formTitleStyle,
+} from "../shared/formStyles";
 
 const contactSchema = z.object({
   name: z.string().min(3, "Tên nhóm phải chứa ít nhất 3 ký tự"),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
-  userIds: z.string().transform((val) =>
-    val
-      ? val
-          .split(",")
-          .map((id) => parseInt(id.trim()))
-          .filter((n) => !isNaN(n))
-      : [],
-  ),
-  emailAddresses: z.string().transform((val) =>
-    val
-      ? val
-          .split(",")
-          .map((e) => e.trim())
-          .filter((e) => e.length > 0)
-      : [],
-  ),
-  webhookUrls: z.string().transform((val) =>
-    val
-      ? val
-          .split(",")
-          .map((w) => w.trim())
-          .filter((w) => w.length > 0)
-      : [],
-  ),
 });
 
+const singleEmailSchema = z.string().email("Email không hợp lệ");
+
 type ContactFormValues = z.input<typeof contactSchema>;
-type ContactFormData = z.output<typeof contactSchema>;
+export type ContactFormData = z.output<typeof contactSchema> & {
+  emailAddresses: string[];
+};
 
 interface ContactFormProps {
   initialData?: ContactGroupUpdateCommand | null;
-  onSubmit: (data: ContactGroupCreateCommand) => Promise<void>;
+  onSubmit: (data: ContactFormData) => Promise<void>;
   onCancel: () => void;
   loading: boolean;
 }
@@ -54,123 +45,111 @@ export const ContactForm: React.FC<ContactFormProps> = ({
   onCancel,
   loading,
 }) => {
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailAddresses, setEmailAddresses] = useState<string[]>([]);
+  const [emailError, setEmailError] = useState("");
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ContactFormValues, unknown, ContactFormData>({
+  } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
       description: "",
       isActive: true,
-      userIds: "",
-      emailAddresses: "",
-      webhookUrls: "",
     },
   });
 
   useEffect(() => {
     if (initialData) {
       reset({
-        ...initialData,
-        userIds: initialData.userIds?.join(", ") || "",
-        emailAddresses: initialData.emailAddresses?.join(", ") || "",
-        webhookUrls: initialData.webhookUrls?.join(", ") || "",
+        name: initialData.name,
+        description: initialData.description || "",
+        isActive: initialData.isActive ?? true,
       });
+      setEmailAddresses(initialData.emailAddresses ?? []);
+      setEmailDraft("");
+      setEmailError("");
+      return;
     }
+
+    reset({
+      name: "",
+      description: "",
+      isActive: true,
+    });
+    setEmailAddresses([]);
+    setEmailDraft("");
+    setEmailError("");
   }, [initialData, reset]);
 
+  const addEmail = () => {
+    const normalizedEmail = emailDraft.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return;
+    }
+
+    const parsed = singleEmailSchema.safeParse(normalizedEmail);
+    if (!parsed.success) {
+      setEmailError(parsed.error.issues[0]?.message || "Email không hợp lệ");
+      return;
+    }
+
+    if (emailAddresses.includes(normalizedEmail)) {
+      setEmailError("Email này đã được thêm");
+      return;
+    }
+
+    setEmailAddresses((current) => [...current, normalizedEmail]);
+    setEmailDraft("");
+    setEmailError("");
+  };
+
+  const removeEmail = (email: string) => {
+    setEmailAddresses((current) => current.filter((item) => item !== email));
+  };
+
+  const submitHandler = async (data: ContactFormValues) => {
+    await onSubmit({
+      ...data,
+      isActive: data.isActive ?? true,
+      emailAddresses,
+    });
+  };
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.5)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-      }}
-    >
+    <div style={formOverlayStyle}>
       <div
         className="card"
         style={{
-          width: "100%",
-          maxWidth: "550px",
-          padding: "32px",
-          position: "relative",
+          ...formModalStyle,
+          maxWidth: "620px",
           animation: "fadeIn 0.3s ease-out",
-          maxHeight: "90vh",
-          overflowY: "auto",
         }}
       >
-        <button
-          onClick={onCancel}
-          style={{
-            position: "absolute",
-            top: "24px",
-            right: "24px",
-            background: "none",
-            border: "none",
-            color: "var(--text-muted)",
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={onCancel} style={formCloseButtonStyle}>
           <X size={24} />
         </button>
 
-        <h2
-          style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 24px 0" }}
-        >
-          {initialData ? "Chỉnh sửa Contact Group" : "Thêm mới Contact Group"}
+        <h2 style={formTitleStyle}>
+          {initialData ? "Chỉnh sửa nhóm liên hệ" : "Tạo nhóm liên hệ"}
         </h2>
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(submitHandler)}
           style={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
-              }}
-            >
-              Tên nhóm liên hệ (*)
-            </label>
+            <label style={formLabelStyle}>Tên nhóm liên hệ (*)</label>
             <input
               {...register("name")}
               placeholder="VD: Nhóm kỹ thuật Backend"
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: `1px solid ${errors.name ? "var(--error-color)" : "var(--card-border)"}`,
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
+              style={formInputStyle(Boolean(errors.name))}
             />
             {errors.name && (
-              <div
-                style={{
-                  color: "var(--error-color)",
-                  fontSize: "0.75rem",
-                  marginTop: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
+              <div style={formErrorStyle}>
                 <AlertCircle size={12} />
                 {errors.name.message as string}
               </div>
@@ -178,121 +157,90 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
-              }}
-            >
-              Mô tả
-            </label>
-            <input
+            <label style={formLabelStyle}>Mô tả</label>
+            <textarea
               {...register("description")}
               placeholder="Mô tả ngắn gọn về nhóm này..."
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
+              style={formTextareaStyle()}
             />
           </div>
 
-          <div>
-            <label
+          <div style={{ display: "grid", gap: "12px" }}>
+            <label style={formLabelStyle}>Email nhận thông báo (tuỳ chọn)</label>
+            <div
               style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) auto",
+                gap: "12px",
               }}
             >
-              Danh sách User IDs
-            </label>
-            <input
-              {...register("userIds")}
-              placeholder="VD: 1, 2, 3 (Cách nhau bằng dấu phẩy)"
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
-            />
-          </div>
+              <input
+                value={emailDraft}
+                onChange={(event) => {
+                  setEmailDraft(event.target.value);
+                  if (emailError) {
+                    setEmailError("");
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addEmail();
+                  }
+                }}
+                placeholder="Nhập email rồi bấm thêm"
+                style={formInputStyle(Boolean(emailError))}
+              />
+              <button
+                type="button"
+                onClick={addEmail}
+                style={formSecondaryButtonStyle}
+              >
+                <Plus size={16} />
+                Thêm email
+              </button>
+            </div>
+            {emailError && (
+              <div style={formErrorStyle}>
+                <AlertCircle size={12} />
+                {emailError}
+              </div>
+            )}
 
-          <div>
-            <label
+            <div
               style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px",
+                minHeight: "16px",
               }}
             >
-              Danh sách Email (Tuỳ chọn)
-            </label>
-            <input
-              {...register("emailAddresses")}
-              placeholder="VD: oncall@company.com, alert@company.com"
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
-            />
+              {emailAddresses.map((email) => (
+                <button
+                  key={email}
+                  type="button"
+                  onClick={() => removeEmail(email)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid var(--card-border)",
+                    background: "var(--accent-bg)",
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                  }}
+                  title="Bấm để xoá email này"
+                >
+                  <Mail size={14} />
+                  {email}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                marginBottom: "8px",
-              }}
-            >
-              Danh sách Webhook URLs (Slack, Teams...)
-            </label>
-            <input
-              {...register("webhookUrls")}
-              placeholder="VD: https://hooks.slack.com/..."
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "10px",
-                color: "var(--text-primary)",
-                outline: "none",
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginTop: "8px",
-            }}
-          >
+          <div style={formCheckboxRowStyle}>
             <input
               type="checkbox"
               id="isActive"
@@ -307,52 +255,25 @@ export const ContactForm: React.FC<ContactFormProps> = ({
                 color: "var(--text-primary)",
               }}
             >
-              Kích hoạt nhóm này
+              Kích hoạt nhóm liên hệ này
             </label>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              marginTop: "16px",
-              justifyContent: "flex-end",
-            }}
-          >
+          <div style={formActionsStyle}>
             <button
               type="button"
               onClick={onCancel}
-              style={{
-                padding: "12px 24px",
-                background: "none",
-                border: "1px solid var(--card-border)",
-                color: "var(--text-primary)",
-                borderRadius: "10px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
+              style={formSecondaryButtonStyle}
             >
               Huỷ bỏ
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 24px",
-                background: "var(--accent-color)",
-                border: "none",
-                color: "#fff",
-                borderRadius: "10px",
-                fontWeight: 600,
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.7 : 1,
-              }}
+              style={{ ...formPrimaryButtonStyle, opacity: loading ? 0.7 : 1 }}
             >
               <Save size={18} />
-              {loading ? "Đang lưu..." : "Lưu Nhóm"}
+              {loading ? "Đang lưu..." : "Lưu nhóm liên hệ"}
             </button>
           </div>
         </form>

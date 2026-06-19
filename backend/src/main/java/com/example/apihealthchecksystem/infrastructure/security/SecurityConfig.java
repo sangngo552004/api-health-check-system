@@ -72,7 +72,7 @@ public class SecurityConfig {
             .filter(origin -> !origin.isBlank())
             .toList());
     configuration.setAllowCredentials(true);
-    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setExposedHeaders(List.of("Authorization"));
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../context/useToast";
 import { useEndpointStore } from "../../store/useEndpointStore";
+import { endpointsApi } from "../../services/api/endpoints.api";
 import {
-  EndpointCreateCommand,
   EndpointDto,
   EndpointStatus,
   EndpointUpdateCommand,
@@ -22,15 +23,36 @@ export const EndpointsList: React.FC = () => {
     deleteEndpoint,
   } = useEndpointStore();
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [environmentFilter, setEnvironmentFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [methodFilter, setMethodFilter] = useState("");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEndpoint, setEditingEndpoint] =
     useState<EndpointUpdateCommand | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchEndpoints(0, 100);
-  }, [fetchEndpoints]);
+    void fetchEndpoints({
+      page: 0,
+      size: 100,
+      search: searchTerm.trim() || undefined,
+      environment: environmentFilter || undefined,
+      status: statusFilter || undefined,
+      method: methodFilter || undefined,
+      sortBy: "name",
+      sortDir,
+    });
+  }, [
+    environmentFilter,
+    fetchEndpoints,
+    methodFilter,
+    searchTerm,
+    sortDir,
+    statusFilter,
+  ]);
 
   const getStatusColor = (status: EndpointStatus) => {
     switch (status) {
@@ -58,32 +80,39 @@ export const EndpointsList: React.FC = () => {
     }
   };
 
-  const filteredEndpoints = endpoints.filter(
-    (endpoint) =>
-      endpoint.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      endpoint.url.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   const handleAdd = () => {
     setEditingEndpoint(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (endpoint: EndpointDto) => {
-    setEditingEndpoint({
-      id: endpoint.id,
-      name: endpoint.name,
-      url: endpoint.url,
-      method: endpoint.method,
-      environment: endpoint.environment,
-      checkType: endpoint.checkType,
-      isActive: endpoint.isActive,
-      policyId: endpoint.policyId,
-      alertRuleIds: endpoint.alertRuleIds,
-      tags: endpoint.tags,
-      headers: endpoint.headers,
-    });
-    setIsFormOpen(true);
+  const handleEdit = async (endpoint: EndpointDto) => {
+    try {
+      const fullEndpoint = await endpointsApi.getEndpointById(endpoint.id);
+      setEditingEndpoint({
+        id: fullEndpoint.id,
+        name: fullEndpoint.name,
+        url: fullEndpoint.url,
+        method: fullEndpoint.method,
+        environment: fullEndpoint.environment as
+          | "PRODUCTION"
+          | "STAGING"
+          | "DEVELOPMENT",
+        checkType: fullEndpoint.checkType,
+        isActive: fullEndpoint.isActive,
+        policyId: fullEndpoint.policyId,
+        alertRuleIds: fullEndpoint.alertRuleIds,
+        tags: fullEndpoint.tags,
+        headers: fullEndpoint.headers,
+        requestBody: fullEndpoint.requestBody,
+      });
+      setIsFormOpen(true);
+    } catch (error) {
+      showToast({
+        title: "Không tải được endpoint",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
+    }
   };
 
   const handleDelete = async (endpointId: number) => {
@@ -91,30 +120,73 @@ export const EndpointsList: React.FC = () => {
       return;
     }
 
-    await deleteEndpoint(endpointId);
+    try {
+      await deleteEndpoint(endpointId);
+      showToast({
+        title: "Xóa endpoint thành công",
+        description: "Endpoint đã được xóa khỏi danh sách giám sát.",
+        variant: "success",
+      });
+    } catch (error) {
+      showToast({
+        title: "Xóa endpoint thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
+    }
   };
 
   const handleFormSubmit = async (data: EndpointFormData) => {
     setSubmitting(true);
     try {
-      const payload: Omit<EndpointCreateCommand, "alertRuleIds" | "headers"> = {
-        ...data,
-        policyId: data.policyId ?? undefined,
-      };
-
       if (editingEndpoint) {
         await updateEndpoint(editingEndpoint.id, {
-          ...payload,
           id: editingEndpoint.id,
-          alertRuleIds: [],
-          headers: {},
+          name: data.name,
+          url: data.url,
+          method: data.method,
+          environment: data.environment,
+          checkType: data.checkType,
+          isActive: data.isActive,
+          policyId: data.policyId,
+          alertRuleIds: data.alertRuleIds,
+          tags: data.tags,
+          headers: data.headers,
+          requestBody: data.requestBody,
+        });
+        showToast({
+          title: "Cập nhật endpoint thành công",
+          description: `Endpoint ${data.name} đã được cập nhật.`,
+          variant: "success",
         });
       } else {
-        await createEndpoint({ ...payload, alertRuleIds: [], headers: {} });
+        await createEndpoint({
+          name: data.name,
+          url: data.url,
+          method: data.method,
+          environment: data.environment,
+          checkType: data.checkType,
+          policyId: data.policyId,
+          alertRuleIds: data.alertRuleIds,
+          tags: data.tags,
+          headers: data.headers,
+          requestBody: data.requestBody,
+        });
+        showToast({
+          title: "Tạo endpoint thành công",
+          description: `Endpoint ${data.name} đã được thêm vào giám sát.`,
+          variant: "success",
+        });
       }
       setIsFormOpen(false);
     } catch (error) {
-      alert("Co loi xay ra: " + getErrorMessage(error));
+      showToast({
+        title: editingEndpoint
+          ? "Cập nhật endpoint thất bại"
+          : "Tạo endpoint thất bại",
+        description: getErrorMessage(error),
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -123,24 +195,72 @@ export const EndpointsList: React.FC = () => {
   return (
     <div style={{ animation: "fadeIn 0.5s ease-out" }}>
       <EndpointsToolbar
-        title={t("endpoints.title", "Monitored Endpoints")}
-        subtitle={t("endpoints.subtitle", "Quan ly muc giam sat")}
-        addLabel={t("endpoints.addBtn", "Them Endpoint")}
+        title={t("endpoints.title", "Endpoint giám sát")}
+        subtitle={t("endpoints.subtitle", "Quản lý danh sách giám sát")}
+        addLabel={t("endpoints.addBtn", "Thêm endpoint")}
         searchPlaceholder={t(
           "endpoints.search",
-          "Tim kiem theo ten hoac URL...",
+          "Tìm kiếm theo tên hoặc URL...",
         )}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         onCreate={handleAdd}
+        filters={
+          <>
+            <select
+              value={environmentFilter}
+              onChange={(event) => setEnvironmentFilter(event.target.value)}
+              style={filterStyle}
+            >
+              <option value="">Tất cả môi trường</option>
+              <option value="PRODUCTION">Production</option>
+              <option value="STAGING">Staging</option>
+              <option value="DEVELOPMENT">Development</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              style={filterStyle}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="UP">Up</option>
+              <option value="DEGRADED">Degraded</option>
+              <option value="DOWN">Down</option>
+              <option value="UNKNOWN">Unknown</option>
+            </select>
+            <select
+              value={methodFilter}
+              onChange={(event) => setMethodFilter(event.target.value)}
+              style={filterStyle}
+            >
+              <option value="">Tất cả method</option>
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+              <option value="PATCH">PATCH</option>
+              <option value="HEAD">HEAD</option>
+            </select>
+            <select
+              value={sortDir}
+              onChange={(event) =>
+                setSortDir(event.target.value as "asc" | "desc")
+              }
+              style={filterStyle}
+            >
+              <option value="desc">Giảm dần</option>
+              <option value="asc">Tăng dần</option>
+            </select>
+          </>
+        }
       />
 
       <EndpointsTable
         loading={loading}
-        endpoints={filteredEndpoints}
+        endpoints={endpoints}
         getStatusColor={getStatusColor}
         getStatusBg={getStatusBg}
-        onEdit={handleEdit}
+        onEdit={(endpoint) => void handleEdit(endpoint)}
         onDelete={(endpointId) => void handleDelete(endpointId)}
       />
 
@@ -154,4 +274,13 @@ export const EndpointsList: React.FC = () => {
       )}
     </div>
   );
+};
+
+const filterStyle: React.CSSProperties = {
+  minWidth: "170px",
+  padding: "10px 14px",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--card-border)",
+  borderRadius: "10px",
+  color: "var(--text-primary)",
 };

@@ -12,7 +12,15 @@ public interface ManageCheckPolicyUseCase {
 
   CheckPolicyDto getPolicy(Long workspaceId, Long id);
 
-  PagedResponseDto<CheckPolicyDto> getPoliciesByWorkspace(Long workspaceId, int page, int size);
+  PagedResponseDto<CheckPolicyDto> getPoliciesByWorkspace(
+      Long workspaceId,
+      String search,
+      Integer expectedStatusCode,
+      Boolean hasDegradedResponseTimeThreshold,
+      int page,
+      int size,
+      String sortBy,
+      String sortDir);
 
   void deletePolicy(Long workspaceId, Long id);
 }

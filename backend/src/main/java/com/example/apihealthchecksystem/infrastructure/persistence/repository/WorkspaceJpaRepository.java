@@ -15,10 +15,11 @@ public interface WorkspaceJpaRepository extends JpaRepository<WorkspaceJpaEntity
       """
       SELECT w
       FROM WorkspaceJpaEntity w
-      WHERE (:search IS NULL
+      WHERE (:search = ''
               OR LOWER(w.name) LIKE LOWER(CONCAT('%', :search, '%'))
               OR LOWER(w.slug) LIKE LOWER(CONCAT('%', :search, '%'))
-              OR LOWER(COALESCE(w.description, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              OR LOWER(COALESCE(w.description, ''))
+                  LIKE LOWER(CONCAT('%', :search, '%')))
           AND (:isActive IS NULL OR w.isActive = :isActive)
           AND (:ownerId IS NULL OR w.ownerId = :ownerId)
       """)

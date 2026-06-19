@@ -9,6 +9,7 @@ export const EndpointsToolbar: React.FC<{
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   onCreate: () => void;
+  filters?: React.ReactNode;
 }> = ({
   title,
   subtitle,
@@ -17,6 +18,7 @@ export const EndpointsToolbar: React.FC<{
   searchTerm,
   onSearchTermChange,
   onCreate,
+  filters,
 }) => (
   <>
     <div
@@ -73,9 +75,10 @@ export const EndpointsToolbar: React.FC<{
         padding: "16px 24px",
         display: "flex",
         gap: "16px",
+        flexWrap: "wrap",
       }}
     >
-      <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
+      <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
         <Search
           size={18}
           style={{
@@ -102,6 +105,7 @@ export const EndpointsToolbar: React.FC<{
           }}
         />
       </div>
+      {filters}
     </div>
   </>
 );

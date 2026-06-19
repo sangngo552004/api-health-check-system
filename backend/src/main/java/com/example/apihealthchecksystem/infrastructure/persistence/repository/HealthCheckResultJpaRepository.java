@@ -11,4 +11,8 @@ public interface HealthCheckResultJpaRepository
   List<HealthCheckResultJpaEntity> findByEndpointId(Long endpointId);
 
   List<HealthCheckResultJpaEntity> findTop10ByEndpointIdOrderByCheckedAtDesc(Long endpointId);
+
+  List<HealthCheckResultJpaEntity> findByEndpointIdInOrderByCheckedAtDesc(List<Long> endpointIds);
+
+  List<HealthCheckResultJpaEntity> findByIdIn(List<Long> ids);
 }

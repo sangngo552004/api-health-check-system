@@ -13,6 +13,7 @@ public interface AlertRuleDtoMapper {
   @Mapping(target = "isActive", constant = "true")
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AlertRule toDomain(AlertRuleCreateCommand command);
 
   AlertRuleDto toDto(AlertRule rule);

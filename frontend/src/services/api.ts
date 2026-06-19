@@ -5,7 +5,7 @@ const BASE_URL =
 const REQUEST_TIMEOUT_MS = 10000;
 
 export interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>;
+  params?: Record<string, string | number | boolean | undefined>;
 }
 
 interface ApiErrorResponse {
@@ -49,7 +49,9 @@ async function request<T>(
   if (options.params) {
     const searchParams = new URLSearchParams();
     Object.entries(options.params).forEach(([key, value]) => {
-      searchParams.append(key, String(value));
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
     });
     url += `?${searchParams.toString()}`;
   }
@@ -133,6 +135,12 @@ export const api = {
     request<T>(path, {
       ...options,
       method: "PUT",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+  patch: <T, B = unknown>(path: string, body?: B, options?: RequestOptions) =>
+    request<T>(path, {
+      ...options,
+      method: "PATCH",
       body: body ? JSON.stringify(body) : undefined,
     }),
   delete: <T>(path: string, options?: RequestOptions) =>

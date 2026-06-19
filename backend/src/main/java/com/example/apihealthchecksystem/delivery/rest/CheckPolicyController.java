@@ -32,7 +32,7 @@ public class CheckPolicyController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> create(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @Valid @RequestBody CheckPolicyCreateCommand command) {
@@ -41,17 +41,31 @@ public class CheckPolicyController {
 
   @GetMapping
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<PagedResponseDto<CheckPolicyDto>> getByWorkspace(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) Integer expectedStatusCode,
+      @RequestParam(required = false) Boolean hasDegradedResponseTimeThreshold,
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.success(useCase.getPoliciesByWorkspace(workspaceId, page, size));
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDir) {
+    return ApiResponse.success(
+        useCase.getPoliciesByWorkspace(
+            workspaceId,
+            search,
+            expectedStatusCode,
+            hasDegradedResponseTimeThreshold,
+            page,
+            size,
+            sortBy,
+            sortDir));
   }
 
   @GetMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> getById(
       @RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     return ApiResponse.success(useCase.getPolicy(workspaceId, id));
@@ -59,7 +73,7 @@ public class CheckPolicyController {
 
   @PutMapping("/{id}")
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public ApiResponse<CheckPolicyDto> update(
       @RequestHeader("X-Workspace-Id") Long workspaceId,
       @PathVariable Long id,
@@ -71,8 +85,7 @@ public class CheckPolicyController {
             command.intervalSeconds(),
             command.timeoutMillis(),
             command.retryCount(),
-            command.failureThreshold(),
-            command.latencyThresholdMillis(),
+            command.degradedResponseTimeMillis(),
             command.expectedStatusCode(),
             command.expectedResponseBody(),
             command.responseRegex());
@@ -82,7 +95,7 @@ public class CheckPolicyController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize(
-      "@workspaceSecurity.canAccessWorkspaceArea(#workspaceId, authentication.principal.id)")
+      "@workspaceSecurity.isWorkspaceMember(#workspaceId, authentication.principal.id)")
   public void delete(@RequestHeader("X-Workspace-Id") Long workspaceId, @PathVariable Long id) {
     useCase.deletePolicy(workspaceId, id);
   }

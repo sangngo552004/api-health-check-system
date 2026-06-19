@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo Service</title>
+    <style>
+      body {
+        margin: 24px;
+        font-family: Arial, sans-serif;
+        color: #222;
+        background: #f7f7f7;
+      }
+
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      .section {
+        margin-top: 24px;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      button {
+        padding: 8px 12px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+        background: #fafafa;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #f0f0f0;
+      }
+
+      input {
+        padding: 8px 10px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+        width: 180px;
+      }
+
+      .state,
+      .mode-card,
+      .note,
+      pre {
+        padding: 12px;
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+      }
+
+      .state {
+        line-height: 1.6;
+      }
+
+      .mode-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mode-card.active {
+        border-color: #888;
+        background: #efefef;
+      }
+
+      .mode-card h3 {
+        margin-bottom: 6px;
+      }
+
+      .muted {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      code {
+        display: inline-block;
+        padding: 2px 6px;
+        background: #efefef;
+        border-radius: 4px;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        min-height: 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Demo Service</h1>
+      <p class="muted">
+        Trang điều khiển đơn giản cho endpoint <code>/api/demo/health/toggle</code>.
+      </p>
+
+      <div class="section">
+        <h2>State hiện tại</h2>
+        <div id="state" class="state">Đang tải...</div>
+        <div class="row">
+          <button id="refresh-state">Làm mới</button>
+          <button id="reset-state">Reset</button>
+          <button id="call-toggle">Gọi toggle endpoint</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Đổi mode</h2>
+        <p class="muted">
+          Chọn một mode bên dưới. Mỗi mode sẽ có cấu hình riêng để tránh nhầm lẫn.
+        </p>
+
+        <div class="mode-list">
+          <div class="mode-card" data-mode-card="OK">
+            <h3>OK</h3>
+            <div class="muted">
+              Endpoint luôn trả <code>200 OK</code>. Dùng để hệ thống nhận diện service đang bình thường hoặc để resolve incident.
+            </div>
+            <div class="row">
+              <button data-mode="OK">Chuyển sang OK</button>
+            </div>
+          </div>
+
+          <div class="mode-card" data-mode-card="SLOW">
+            <h3>SLOW</h3>
+            <div class="muted">
+              Endpoint vẫn trả <code>200</code> nhưng phản hồi chậm. Dùng để test rule về thời gian phản hồi.
+            </div>
+            <div class="row">
+              <input id="slow-input" type="number" min="0" value="4000" placeholder="Slow delay ms" />
+              <button data-mode="SLOW">Chuyển sang SLOW</button>
+            </div>
+          </div>
+
+          <div class="mode-card" data-mode-card="ERROR">
+            <h3>ERROR</h3>
+            <div class="muted">
+              Endpoint trả mã lỗi cố định như <code>500</code> hoặc <code>503</code>. Dùng để mở incident nhanh và dễ kiểm soát.
+            </div>
+            <div class="row">
+              <input id="error-input" type="number" min="400" max="599" value="500" placeholder="Error code" />
+              <button data-mode="ERROR">Chuyển sang ERROR</button>
+            </div>
+          </div>
+
+          <div class="mode-card" data-mode-card="FLAKY">
+            <h3>FLAKY</h3>
+            <div class="muted">
+              Endpoint lúc lỗi lúc bình thường, xen kẽ qua từng lần gọi. Dùng để test tình huống chập chờn hoặc rule lỗi liên tiếp.
+            </div>
+            <div class="row">
+              <input id="flaky-error-input" type="number" min="400" max="599" value="500" placeholder="Error code" />
+              <button data-mode="FLAKY">Chuyển sang FLAKY</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Request sẽ gửi</h2>
+        <div id="request-preview" class="note">
+          Chọn một mode để xem request tương ứng.
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Response</h2>
+        <pre id="response">Chưa có dữ liệu.</pre>
+      </div>
+    </div>
+
+    <script>
+      const stateEl = document.getElementById("state");
+      const responseEl = document.getElementById("response");
+      const requestPreviewEl = document.getElementById("request-preview");
+      const slowInput = document.getElementById("slow-input");
+      const errorInput = document.getElementById("error-input");
+      const flakyErrorInput = document.getElementById("flaky-error-input");
+      let selectedMode = "OK";
+
+      function renderJson(data) {
+        responseEl.textContent =
+          typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      }
+
+      function renderState(state) {
+        stateEl.textContent =
+          `mode: ${state.mode}\n` +
+          `slowDelayMs: ${state.slowDelayMs}\n` +
+          `errorStatus: ${state.errorStatus}\n` +
+          `flakyCounter: ${state.flakyCounter}\n` +
+          `updatedAt: ${state.updatedAt}`;
+        slowInput.value = state.slowDelayMs;
+        errorInput.value = state.errorStatus;
+        flakyErrorInput.value = state.errorStatus;
+        selectModeCard(state.mode);
+      }
+
+      function getModePayload(mode) {
+        if (mode === "SLOW") {
+          return {
+            mode,
+            slowDelayMs: Number(slowInput.value || 0),
+          };
+        }
+
+        if (mode === "ERROR") {
+          return {
+            mode,
+            errorStatus: Number(errorInput.value || 500),
+          };
+        }
+
+        if (mode === "FLAKY") {
+          return {
+            mode,
+            errorStatus: Number(flakyErrorInput.value || 500),
+          };
+        }
+
+        return { mode };
+      }
+
+      function updateRequestPreview() {
+        const payload = getModePayload(selectedMode);
+        requestPreviewEl.textContent =
+          "POST /api/demo/control/mode\n\n" +
+          JSON.stringify(payload, null, 2);
+      }
+
+      function selectModeCard(mode) {
+        selectedMode = mode;
+        document.querySelectorAll("[data-mode-card]").forEach((card) => {
+          card.classList.toggle("active", card.dataset.modeCard === mode);
+        });
+        updateRequestPreview();
+      }
+
+      async function requestJson(url, options) {
+        const response = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+
+        const text = await response.text();
+        let payload = text;
+
+        try {
+          payload = text ? JSON.parse(text) : null;
+        } catch {
+          payload = text;
+        }
+
+        renderJson({
+          status: response.status,
+          data: payload,
+        });
+
+        return payload;
+      }
+
+      async function loadState() {
+        const payload = await requestJson("/api/demo/control/state");
+        if (payload && typeof payload === "object") {
+          renderState(payload);
+        }
+      }
+
+      async function setMode(mode) {
+        selectModeCard(mode);
+        const payload = await requestJson("/api/demo/control/mode", {
+          method: "POST",
+          body: JSON.stringify(getModePayload(mode)),
+        });
+
+        if (payload && typeof payload === "object") {
+          renderState(payload);
+        }
+      }
+
+      async function resetState() {
+        const payload = await requestJson("/api/demo/control/reset", {
+          method: "POST",
+        });
+
+        if (payload && typeof payload === "object") {
+          renderState(payload);
+        }
+      }
+
+      document.getElementById("refresh-state").addEventListener("click", loadState);
+      document.getElementById("reset-state").addEventListener("click", resetState);
+      document
+        .getElementById("call-toggle")
+        .addEventListener("click", () => requestJson("/api/demo/health/toggle"));
+
+      document.querySelectorAll("[data-mode]").forEach((button) => {
+        button.addEventListener("click", () => setMode(button.dataset.mode));
+      });
+
+      [slowInput, errorInput, flakyErrorInput].forEach((input) => {
+        input.addEventListener("input", updateRequestPreview);
+      });
+
+      selectModeCard("OK");
+
+      loadState().catch((error) => {
+        stateEl.textContent = "Không tải được state.";
+        responseEl.textContent = error instanceof Error ? error.message : String(error);
+      });
+    </script>
+  </body>
+</html>

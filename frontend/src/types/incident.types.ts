@@ -15,3 +15,15 @@ export interface IncidentDto {
   rootCause: string | null;
   failingResultIds: number[] | null;
 }
+
+export interface IncidentHealthCheckResultDto {
+  id: number;
+  checkedAt: string;
+  status: string | null;
+  httpStatusCode: number | null;
+  responseTimeMillis: number | null;
+  errorMessage: string | null;
+  responsePayload: string | null;
+  success: boolean | null;
+  nodeId: string | null;
+}

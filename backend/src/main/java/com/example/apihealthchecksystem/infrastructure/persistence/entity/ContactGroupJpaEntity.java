@@ -30,24 +30,10 @@ public class ContactGroupJpaEntity extends BaseJpaEntity {
 
   @ElementCollection
   @CollectionTable(
-      name = "contact_group_users",
-      joinColumns = @JoinColumn(name = "contact_group_id"))
-  @Column(name = "user_id")
-  private List<Long> userIds;
-
-  @ElementCollection
-  @CollectionTable(
       name = "contact_group_emails",
       joinColumns = @JoinColumn(name = "contact_group_id"))
   @Column(name = "email_address")
   private List<String> emailAddresses;
-
-  @ElementCollection
-  @CollectionTable(
-      name = "contact_group_webhooks",
-      joinColumns = @JoinColumn(name = "contact_group_id"))
-  @Column(name = "webhook_url")
-  private List<String> webhookUrls;
 
   @Column(name = "is_active")
   private Boolean isActive;

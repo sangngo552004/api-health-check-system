@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { useAuth } from "../../context/useAuth";
+import { useToast } from "../../context/useToast";
 import { workspacesApi } from "../../services/api/workspaces.api";
 import {
   AdminWorkspaceCreateCommand,
+  AdminUserDto,
   AdminWorkspaceUpdateCommand,
   WorkspaceDto,
   WorkspaceMemberDto,
@@ -17,9 +20,13 @@ import {
   emptyWorkspaceForm,
   WorkspaceFormState,
 } from "./workspaces/workspacePage.types";
+import { generateWorkspaceSlug } from "./workspaces/workspaceSlug";
 
 export const AdminWorkspacesPage: React.FC = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<AdminUserDto[]>([]);
   const [members, setMembers] = useState<Record<number, WorkspaceMemberDto[]>>(
     {},
   );
@@ -30,8 +37,6 @@ export const AdminWorkspacesPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
-  const [ownerIdFilter, setOwnerIdFilter] = useState("");
-  const [ownerId, setOwnerId] = useState<number | undefined>(undefined);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
@@ -43,7 +48,8 @@ export const AdminWorkspacesPage: React.FC = () => {
     null,
   );
   const [form, setForm] = useState<WorkspaceFormState>(emptyWorkspaceForm);
-  const [memberUserId, setMemberUserId] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const activeMembers = useMemo(
     () => (expandedId ? members[expandedId] || [] : []),
     [expandedId, members],
@@ -57,7 +63,6 @@ export const AdminWorkspacesPage: React.FC = () => {
         size,
         search: search || undefined,
         isActive: status === "ALL" ? undefined : status === "ACTIVE",
-        ownerId,
         sortBy,
         sortDir,
       });
@@ -66,29 +71,60 @@ export const AdminWorkspacesPage: React.FC = () => {
       setTotalPages(response.totalPages);
       setError(null);
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể tải danh sách workspace"));
+      const message = getErrorMessage(err, "Không thể tải danh sách workspace");
+      setError(message);
     } finally {
       setLoading(false);
     }
-  }, [ownerId, page, search, size, sortBy, sortDir, status]);
+  }, [page, search, size, sortBy, sortDir, status]);
 
   useEffect(() => {
     void loadWorkspaces();
   }, [loadWorkspaces]);
 
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const response = await workspacesApi.getAdminUsers({
+          page: 0,
+          size: 100,
+          role: "USER",
+          isActive: true,
+          sortBy: "username",
+          sortDir: "asc",
+        });
+        setAvailableUsers(response.items);
+      } catch {
+        setAvailableUsers([]);
+      }
+    };
+
+    void loadUsers();
+  }, []);
+
   const toggleMembers = async (workspaceId: number) => {
     if (expandedId === workspaceId) {
       setExpandedId(null);
+      setMemberSearch("");
+      setSelectedMemberId(null);
       return;
     }
 
     setExpandedId(workspaceId);
+    setMemberSearch("");
+    setSelectedMemberId(null);
     if (!members[workspaceId]) {
       try {
         const data = await workspacesApi.getMembers(workspaceId);
         setMembers((prev) => ({ ...prev, [workspaceId]: data }));
       } catch (err) {
-        setError(getErrorMessage(err, "Không thể tải danh sách members"));
+        const message = getErrorMessage(err, "Không thể tải danh sách members");
+        setError(message);
+        showToast({
+          title: "Tải danh sách thành viên thất bại",
+          description: message,
+          variant: "error",
+        });
       }
     }
   };
@@ -104,8 +140,6 @@ export const AdminWorkspacesPage: React.FC = () => {
     setForm({
       name: workspace.name,
       description: workspace.description || "",
-      slug: workspace.slug,
-      ownerId: String(workspace.ownerId),
       isActive: workspace.isActive,
     });
     setModalOpen(true);
@@ -122,35 +156,65 @@ export const AdminWorkspacesPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedName = form.name.trim();
+    const normalizedDescription = form.description.trim() || undefined;
+    const generatedSlug = generateWorkspaceSlug(normalizedName);
+
+    if (!user?.id) {
+      const message = "Không xác định được tài khoản admin hiện tại để tạo workspace.";
+      setError(message);
+      showToast({
+        title: "Lưu workspace thất bại",
+        description: message,
+        variant: "error",
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError(null);
-      const parsedOwnerId = Number(form.ownerId);
 
       if (editingWorkspace) {
         const payload: AdminWorkspaceUpdateCommand = {
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          slug: form.slug.trim(),
-          ownerId: parsedOwnerId,
+          name: normalizedName,
+          description: normalizedDescription,
+          slug: generatedSlug,
+          ownerId: editingWorkspace.ownerId,
           isActive: form.isActive,
         };
         await workspacesApi.updateAdminWorkspace(editingWorkspace.id, payload);
+        showToast({
+          title: "Cập nhật workspace thành công",
+          description: `Workspace ${payload.name} đã được cập nhật.`,
+          variant: "success",
+        });
       } else {
         const payload: AdminWorkspaceCreateCommand = {
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          slug: form.slug.trim(),
-          ownerId: parsedOwnerId,
+          name: normalizedName,
+          description: normalizedDescription,
+          slug: generatedSlug,
+          ownerId: user.id,
           isActive: form.isActive,
         };
         await workspacesApi.createAdminWorkspace(payload);
+        showToast({
+          title: "Tạo workspace thành công",
+          description: `Workspace ${payload.name} đã được tạo với slug ${payload.slug}.`,
+          variant: "success",
+        });
       }
 
       closeModal();
       await loadWorkspaces();
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể lưu workspace"));
+      const message = getErrorMessage(err, "Không thể lưu workspace");
+      setError(message);
+      showToast({
+        title: "Lưu workspace thất bại",
+        description: message,
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -163,6 +227,11 @@ export const AdminWorkspacesPage: React.FC = () => {
     try {
       setError(null);
       await workspacesApi.deleteAdminWorkspace(workspaceId);
+      showToast({
+        title: "Xóa workspace thành công",
+        description: "Workspace đã được xóa khỏi hệ thống.",
+        variant: "success",
+      });
       if (expandedId === workspaceId) {
         setExpandedId(null);
       }
@@ -172,22 +241,44 @@ export const AdminWorkspacesPage: React.FC = () => {
         await loadWorkspaces();
       }
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể xóa workspace"));
+      const message = getErrorMessage(err, "Không thể xóa workspace");
+      setError(message);
+      showToast({
+        title: "Xóa workspace thất bại",
+        description: message,
+        variant: "error",
+      });
     }
   };
 
   const handleAddMember = async () => {
-    if (!expandedId || !memberUserId) {
+    if (!expandedId || !selectedMemberId) {
       return;
     }
     try {
       setError(null);
-      await workspacesApi.addMember(expandedId, Number(memberUserId));
+      await workspacesApi.addMember(expandedId, selectedMemberId);
       const data = await workspacesApi.getMembers(expandedId);
       setMembers((prev) => ({ ...prev, [expandedId]: data }));
-      setMemberUserId("");
+      const addedUser =
+        availableUsers.find((user) => user.id === selectedMemberId) ?? null;
+      setMemberSearch("");
+      setSelectedMemberId(null);
+      showToast({
+        title: "Thêm thành viên thành công",
+        description: addedUser
+          ? `${addedUser.username} đã được thêm vào workspace.`
+          : "Thành viên đã được thêm vào workspace.",
+        variant: "success",
+      });
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể thêm member"));
+      const message = getErrorMessage(err, "Không thể thêm member");
+      setError(message);
+      showToast({
+        title: "Thêm thành viên thất bại",
+        description: message,
+        variant: "error",
+      });
     }
   };
 
@@ -197,8 +288,23 @@ export const AdminWorkspacesPage: React.FC = () => {
       await workspacesApi.removeMember(workspaceId, userId);
       const data = await workspacesApi.getMembers(workspaceId);
       setMembers((prev) => ({ ...prev, [workspaceId]: data }));
+      const removedMember =
+        activeMembers.find((member) => member.userId === userId) ?? null;
+      showToast({
+        title: "Xóa thành viên thành công",
+        description: removedMember
+          ? `${removedMember.username} đã bị xóa khỏi workspace.`
+          : "Thành viên đã bị xóa khỏi workspace.",
+        variant: "success",
+      });
     } catch (err) {
-      setError(getErrorMessage(err, "Không thể xóa member"));
+      const message = getErrorMessage(err, "Không thể xóa member");
+      setError(message);
+      showToast({
+        title: "Xóa thành viên thất bại",
+        description: message,
+        variant: "error",
+      });
     }
   };
 
@@ -223,7 +329,7 @@ export const AdminWorkspacesPage: React.FC = () => {
               color: "var(--text-primary)",
             }}
           >
-            Workspaces
+            Workspace
           </h1>
           <div style={{ color: "var(--text-muted)" }}>
             {loading ? "Đang tải..." : `${totalItems} workspace trong hệ thống`}
@@ -237,12 +343,10 @@ export const AdminWorkspacesPage: React.FC = () => {
 
       <WorkspaceFilters
         searchInput={searchInput}
-        ownerIdFilter={ownerIdFilter}
         status={status}
         sortBy={sortBy}
         sortDir={sortDir}
         onSearchInputChange={setSearchInput}
-        onOwnerIdFilterChange={setOwnerIdFilter}
         onStatusChange={(value) => {
           setStatus(value);
           setPage(0);
@@ -258,15 +362,10 @@ export const AdminWorkspacesPage: React.FC = () => {
         onApply={() => {
           setPage(0);
           setSearch(searchInput.trim());
-          setOwnerId(
-            ownerIdFilter.trim() ? Number(ownerIdFilter.trim()) : undefined,
-          );
         }}
         onReset={() => {
           setSearchInput("");
           setSearch("");
-          setOwnerIdFilter("");
-          setOwnerId(undefined);
           setStatus("ALL");
           setSortBy("createdAt");
           setSortDir("desc");
@@ -293,13 +392,16 @@ export const AdminWorkspacesPage: React.FC = () => {
                   activeMembers={
                     expandedId === workspace.id ? activeMembers : []
                   }
-                  memberUserId={memberUserId}
+                  availableUsers={availableUsers}
+                  memberSearch={memberSearch}
+                  selectedMemberId={selectedMemberId}
                   onToggleMembers={(workspaceId) =>
                     void toggleMembers(workspaceId)
                   }
                   onEdit={openEditModal}
                   onDelete={(workspaceId) => void handleDelete(workspaceId)}
-                  onMemberUserIdChange={setMemberUserId}
+                  onMemberSearchChange={setMemberSearch}
+                  onSelectMember={setSelectedMemberId}
                   onAddMember={() => void handleAddMember()}
                   onRemoveMember={(workspaceId, userId) =>
                     void handleRemoveMember(workspaceId, userId)
